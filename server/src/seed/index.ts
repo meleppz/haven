@@ -155,6 +155,8 @@ export async function seedDatabase(db: Db = defaultDb, now: Date = clock.now()) 
         name: e.name,
         licenseNo: e.licenseNo,
         bio: e.bio,
+        // Only Nadia has a real photo in the design; everyone else uses the design's placeholder until real photos arrive.
+        photoUrl: e.key === "nadia" ? "/static/photos/nadia.png" : "/static/photos/placeholder.png",
         specialties: toJsonList(e.specialties),
         modes: toJsonList(e.modes),
         tarif: e.tarif,
@@ -191,6 +193,7 @@ export async function seedDatabase(db: Db = defaultDb, now: Date = clock.now()) 
         create: {
           name: "Choso Kamo",
           username: "almchosokamo",
+          avatarUrl: "/static/avatars/choso.png",
           age: 20,
           occupation: "Mahasiswa",
           concerns: toJsonList(["Overwhelmed", "Kesulitan Akademik"]),

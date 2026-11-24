@@ -12,7 +12,9 @@ export function Chip({ label, selected, onPress, size = "md", disabled }: Props)
       accessibilityState={{ selected: !!selected, disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.base, selected ? styles.selected : styles.unselected, disabled && { opacity: 0.5 }]}
+      // sm = the compact 35px chips of the design (quick filters); md keeps the 44px touch target.
+      hitSlop={size === "sm" ? { top: 5, bottom: 4 } : undefined}
+      style={[styles.base, size === "sm" && { minHeight: 35 }, selected ? styles.selected : styles.unselected, disabled && { opacity: 0.5 }]}
     >
       <Text variant="bodyM" color={selected ? colors.text.chipSelected : colors.action.primary} style={size === "sm" ? { fontSize: 14, lineHeight: 20 } : undefined}>
         {label}

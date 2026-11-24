@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from "react-native";
-import { colors, layout, radius, shadow } from "@/theme";
+import { colors, fontFamily, layout, radius, shadow } from "@/theme";
 import { Text } from "./Text";
 
 // Figma names these "Button primary" (yellow) / "Button secondary" (blue). The handoff calls the blue one
@@ -10,7 +10,9 @@ type Props = {
   label: string;
   onPress?: () => void;
   variant?: ButtonVariant;
-  size?: "md" | "sm"; // md = full-width CTA, sm = card CTA ("Lihat Profil")
+  /** md = full-width CTA (44), sm = card CTA ("Lihat Profil", 44 touch), xs = compact 32px card CTA from the design. */
+  size?: "md" | "sm" | "xs";
+  fullWidth?: boolean;
   disabled?: boolean;
   loading?: boolean;
   style?: ViewStyle;
@@ -39,7 +41,7 @@ const look = (v: ButtonVariant, pressed: boolean): Look => {
   }
 };
 
-export function Button({ label, onPress, variant = "primary", size = "md", disabled, loading, style }: Props) {
+export function Button({ label, onPress, variant = "primary", size = "md", fullWidth, disabled, loading, style }: Props) {
   const inactive = disabled || loading;
   return (
     <Pressable
@@ -47,11 +49,13 @@ export function Button({ label, onPress, variant = "primary", size = "md", disab
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
       disabled={inactive}
       onPress={onPress}
+      hitSlop={size === "xs" ? { top: 6, bottom: 6 } : undefined}
       style={({ pressed }) => {
         const c = look(variant, pressed);
         return [
           styles.base,
-          size === "md" ? styles.md : styles.sm,
+          size === "md" ? styles.md : size === "sm" ? styles.sm : styles.xs,
+          fullWidth && { alignSelf: "stretch" },
           { backgroundColor: disabled ? colors.action.disabled : c.bg, borderColor: disabled ? "transparent" : c.border },
           style,
         ];
@@ -62,7 +66,8 @@ export function Button({ label, onPress, variant = "primary", size = "md", disab
         return (
           <View style={styles.row}>
             {loading ? <ActivityIndicator color={fg} style={{ marginRight: 8 }} /> : null}
-            <Text variant="label" color={fg} style={size === "md" ? { fontSize: 16, lineHeight: 20 } : undefined}>
+            {/* Figma: card-size buttons use Qanelas Soft SemiBold 14, full-width form buttons use Figtree SemiBold 16. */}
+            <Text variant="label" color={fg} style={size === "md" ? { fontSize: 16, lineHeight: 20 } : { fontFamily: fontFamily.headingSemibold, fontSize: 14, lineHeight: 18 }}>
               {label}
             </Text>
           </View>
@@ -73,8 +78,9 @@ export function Button({ label, onPress, variant = "primary", size = "md", disab
 }
 
 const styles = StyleSheet.create({
-  base: { borderRadius: radius.control, borderWidth: 2, alignItems: "center", justifyContent: "center", minHeight: layout.minTouch, ...shadow.card },
-  md: { alignSelf: "stretch", paddingVertical: 12, paddingHorizontal: 16 },
-  sm: { alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 16 },
+  base: { borderRadius: radius.control, borderWidth: 2, alignItems: "center", justifyContent: "center", ...shadow.card },
+  md: { alignSelf: "stretch", paddingVertical: 12, paddingHorizontal: 16, minHeight: layout.minTouch },
+  sm: { alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 16, minHeight: layout.minTouch },
+  xs: { alignSelf: "flex-start", paddingVertical: 6, paddingHorizontal: 16, minHeight: 32 },
   row: { flexDirection: "row", alignItems: "center" },
 });

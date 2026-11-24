@@ -46,6 +46,8 @@ export default function RootLayout() {
             <Stack.Protected guard={!!token}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="assessment" />
+              <Stack.Screen name="experts/[id]" />
+              <Stack.Screen name="booking/[expertId]" />
             </Stack.Protected>
             <Stack.Protected guard={!token}>
               <Stack.Screen name="(auth)" />

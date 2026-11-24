@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
@@ -16,6 +17,9 @@ export function createApp() {
     res.setHeader("x-server-now", clock.now().toISOString());
     next();
   });
+
+  // Expert photos and demo avatars (seeded photoUrl values are paths under /static).
+  app.use("/static", express.static(fileURLToPath(new URL("../public", import.meta.url)), { maxAge: "1h" }));
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, serverNow: clock.now().toISOString() });

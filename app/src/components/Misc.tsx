@@ -68,20 +68,20 @@ export function Badge({ kind, label }: { kind: BadgeKind; label?: string }) {
   return <Label kind={kind === "active" ? "success" : "primary"} label={label ?? (kind === "active" ? "Aktif" : "Selesai")} />;
 }
 
+// Figma tabs (About / Appointment / Review): translucent neutral-400 track, the active tab is a white radius-12 pill
+// with semibold primary-900 text, inactive tabs are regular neutral-800.
 export function SegmentedTabs({ tabs, value, onChange }: { tabs: string[]; value: string; onChange: (t: string) => void }) {
   return (
     <View style={styles.track}>
       {tabs.map((t) => {
         const on = t === value;
         return (
-          <Pressable
-            key={t}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: on }}
-            onPress={() => onChange(t)}
-            style={[styles.tab, on && { backgroundColor: colors.action.primary }]}
-          >
-            <Text variant="label" color={on ? colors.text.onPrimary : colors.text.secondary}>
+          <Pressable key={t} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => onChange(t)} style={[styles.tab, on && styles.tabOn]}>
+            <Text
+              variant="bodyM"
+              color={on ? colors.text.brandStrong : colors.text.dayLabel}
+              style={{ letterSpacing: -0.32, fontFamily: on ? fontFamily.bodySemibold : fontFamily.body }}
+            >
               {t}
             </Text>
           </Pressable>
@@ -138,8 +138,9 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface.card, borderRadius: radius.card, paddingHorizontal: 16, paddingVertical: 24, gap: 12, ...shadow.card },
   label: { borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 2, alignSelf: "flex-start", justifyContent: "center" },
   pill: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 4, alignSelf: "flex-start" },
-  track: { flexDirection: "row", backgroundColor: colors.surface.muted, borderRadius: radius.full, padding: 4, alignSelf: "stretch" },
-  tab: { flex: 1, alignItems: "center", justifyContent: "center", minHeight: 36, borderRadius: radius.full },
+  track: { flexDirection: "row", justifyContent: "space-between", backgroundColor: "rgba(203,213,221,0.6)", borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 4, alignSelf: "stretch" },
+  tab: { minHeight: 31, paddingHorizontal: 12, paddingVertical: 2, alignItems: "center", justifyContent: "center", borderRadius: radius.control },
+  tabOn: { backgroundColor: colors.surface.card },
   toast: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.toast, ...shadow.card },
   toastImg: { width: 44, height: 44 },
   toastTime: { position: "absolute", top: 8, right: 16 },

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentRef, type Ref } from "react";
 import { StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { uiIcons } from "@/lib/ui-icons";
@@ -49,8 +49,10 @@ export function TextField({ label, error, multiline, style, onFocus, onBlur, ...
   );
 }
 
+type SearchProps = TextInputProps & { ref?: Ref<ComponentRef<typeof TextInput>> };
+
 // Figma "Search Bar": same field with a 24px search icon on the right.
-export function SearchField({ style, onFocus, onBlur, ...rest }: TextInputProps) {
+export function SearchField({ style, onFocus, onBlur, ...rest }: SearchProps) {
   const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.input, styles.searchRow, { borderColor: focused ? colors.border.focus : colors.border.default }, style]}>

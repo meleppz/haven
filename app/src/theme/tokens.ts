@@ -42,10 +42,12 @@ export const colors = {
     brandStrong: p.primary[900],
     onPrimary: p.neutral[0],
     highlight: p.secondary[800],
+    highlightStrong: p.secondary[700], // "Konsultasi dalam 7 hari" (Figma secondary-700)
     error: p.danger[800],
   },
   surface: {
     page: p.neutral[0],
+    sheet: "#FAFAFA", // Beranda body and the expert-detail sheet
     card: p.neutral[0],
     muted: p.neutral[100],
     priceTag: p.secondary[100],

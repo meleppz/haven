@@ -40,6 +40,15 @@ describe("seed data (handoff §11)", () => {
     expect(slots.every((s) => s.endAt.getTime() - s.startAt.getTime() === 3_600_000)).toBe(true);
   });
 
+  it("serves expert photos and the demo avatar", async () => {
+    const nadia = (await list({ q: "nadia" }))[0] as ExpertItem & { photoUrl: string };
+    expect(nadia.photoUrl).toBe("/static/photos/nadia.png");
+    expect((await http().get(nadia.photoUrl)).headers["content-type"]).toContain("image/png");
+    const me = await http().get("/api/me").set(auth(demoToken));
+    expect(me.body.avatarUrl).toBe("/static/avatars/choso.png");
+    expect((await http().get(me.body.avatarUrl)).status).toBe(200);
+  });
+
   it("the demo client matches the spec", async () => {
     const me = await http().get("/api/me").set(auth(demoToken));
     expect(me.body).toMatchObject({ name: "Choso Kamo", username: "almchosokamo", age: 20, occupation: "Mahasiswa", studentStatus: "NONE", phone: "081234567890" });

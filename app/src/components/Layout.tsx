@@ -46,14 +46,14 @@ export function Avatar({ name, uri, size = 48 }: { name: string; uri?: string; s
   );
 }
 
-// StatTile: "100+ / Jam Konseling" on secondary-100 (handoff 6.5, 6.16).
+// Figma StatTile: secondary-200 fill, radius 8, p12, bold primary-800 value (24) over a 14px neutral-800 label.
 export function StatTile({ value, label }: { value: string; label: string }) {
   return (
     <View style={styles.stat}>
-      <Text variant="h3" color={colors.text.highlight}>
+      <Text variant="h2" color={colors.text.brand} style={{ fontFamily: "Figtree_700Bold", letterSpacing: -1.2, textAlign: "center" }}>
         {value}
       </Text>
-      <Text variant="bodyXs" color={colors.text.secondary} style={{ textAlign: "center" }}>
+      <Text variant="bodyS" color={colors.text.dayLabel} style={{ textAlign: "center", letterSpacing: -0.28 }}>
         {label}
       </Text>
     </View>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: layout.pagePadding, paddingBottom: 12, gap: 4 },
   headerSide: { minWidth: layout.minTouch, justifyContent: "center" },
   iconBtn: { width: layout.minTouch, height: layout.minTouch, alignItems: "center", justifyContent: "center", marginLeft: -12 },
-  stat: { flex: 1, backgroundColor: colors.surface.priceTag, borderRadius: radius.card, paddingVertical: 12, paddingHorizontal: 8, alignItems: "center", gap: 2 },
+  stat: { flex: 1, alignSelf: "stretch", backgroundColor: colors.surface.dateBar, borderRadius: radius.toast, padding: 12, alignItems: "center", justifyContent: "center", gap: 4, ...shadow.card },
   accordion: { backgroundColor: colors.surface.card, borderRadius: radius.card, ...shadow.card },
   accordionHead: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, minHeight: layout.minTouch },
   scrim: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },

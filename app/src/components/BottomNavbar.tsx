@@ -30,7 +30,7 @@ export function BottomNavbar({ active, onPress }: { active: NavTab; onPress?: (t
               variant="bodyXs"
               color={on ? colors.nav.active : colors.nav.inactive}
               // Figma lets the label overflow its 57px column (whitespace nowrap), so "Ruang Konsultasi" is never cut.
-              style={{ width: 96, textAlign: "center", fontSize: 10, lineHeight: 15, fontFamily: on ? fontFamily.bodySemibold : fontFamily.body }}
+              style={{ width: 96, maxWidth: 96, textAlign: "center", fontSize: 10, lineHeight: 15, fontFamily: on ? fontFamily.bodySemibold : fontFamily.body }}
               numberOfLines={1}
             >
               {t.key}
