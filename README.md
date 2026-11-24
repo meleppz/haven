@@ -203,3 +203,13 @@ The app bundles Qanelas Soft and Qanelas Regular, which are commercial fonts. Ke
 - Not yet verified on a physical device (Phase 7).
 - Expert-side tooling does not exist; the expert is simulated on the server.
 - The bundled fonts require a license for any public distribution.
+
+## Team
+
+Kelompok 5, Tugas Besar II3120 Layanan Sistem dan Teknologi Informasi
+
+1. Wa Ode Amerta Lambelu Jamaluddin (18224034)
+2. Melvin Irsyad Kuncoro (18224048)
+3. Endda Tsa Azzahra Syaifur (18224094)
+4. Rafael Sean Hadipranoto (18224100)
+5. Gifta Mooira Prasharnissa (18224106)
