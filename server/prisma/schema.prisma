@@ -1,0 +1,222 @@
+// Haven data model (handoff §8). SQLite: arrays are stored as JSON strings and validated with zod at the boundary.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum ExpertType {
+  PSIKOLOG
+  PSIKIATER
+}
+
+enum Mode {
+  CHAT
+  VOICE
+  VIDEO
+}
+
+enum SlotStatus {
+  AVAILABLE
+  LOCKED
+}
+
+enum BookingStatus {
+  AWAITING_PAYMENT
+  PAID
+  IN_SESSION
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum StudentStatus {
+  NONE
+  PENDING
+  VERIFIED
+}
+
+enum PayMethod {
+  QRIS
+  BANK_TRANSFER
+  VIRTUAL_ACCOUNT
+  EWALLET
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum Sender {
+  CLIENT
+  EXPERT
+  SYSTEM
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String
+  googleSub    String?  @unique
+  createdAt    DateTime @default(now())
+  client       Client?
+}
+
+model Client {
+  id                String        @id @default(cuid())
+  userId            String        @unique
+  user              User          @relation(fields: [userId], references: [id])
+  name              String
+  username          String        @unique
+  displayName       String?
+  avatarUrl         String?
+  age               Int?
+  occupation        String?
+  concerns          String? // JSON array of concern labels
+  concernNote       String?
+  assessmentDoneAt  DateTime?
+  studentStatus     StudentStatus @default(NONE)
+  university        String?
+  studentProofPath  String?
+  studentVerifiedAt DateTime?
+  defaultAnonymous  Boolean       @default(false)
+  autoStudentPromo  Boolean       @default(false)
+  bookings          Booking[]
+  reports           Report[]
+}
+
+model Expert {
+  id                  String     @id @default(cuid())
+  type                ExpertType
+  name                String
+  licenseNo           String
+  photoUrl            String?
+  bio                 String?
+  specialties         String // JSON array
+  modes               String // JSON array of Mode
+  tarif               Int // rupiah per 60-min session
+  yearsExperience     Int
+  counselingHours     Int
+  clientsHelped       Int
+  ratingAvg           Float      @default(0)
+  ratingCount         Int        @default(0)
+  baseRatingCount     Int        @default(0)
+  available24x7       Boolean    @default(false)
+  acceptsStudentPromo Boolean    @default(true)
+  slots               Slot[]
+  bookings            Booking[]
+  reviews             Review[]
+}
+
+model Slot {
+  id      String     @id @default(cuid())
+  expertId String
+  expert  Expert     @relation(fields: [expertId], references: [id])
+  startAt DateTime
+  endAt   DateTime
+  status  SlotStatus @default(AVAILABLE)
+  booking Booking?
+
+  @@unique([expertId, startAt])
+  @@index([expertId, startAt, status])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id])
+  expertId        String
+  expert          Expert        @relation(fields: [expertId], references: [id])
+  slotId          String        @unique
+  slot            Slot          @relation(fields: [slotId], references: [id])
+  mode            Mode
+  anonymous       Boolean
+  description     String?
+  usePromo        Boolean
+  status          BookingStatus @default(AWAITING_PAYMENT)
+  holdExpiresAt   DateTime?
+  e2eAcceptedAt   DateTime?
+  joinedAt        DateTime?
+  endedAt         DateTime?
+  durationMinutes Int?
+  penaltyApplied  Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  invoices        Invoice[]
+  transaction     Transaction?
+  messages        Message[]
+  note            SessionNote?
+  review          Review?
+}
+
+model Invoice {
+  ref         String        @id
+  bookingId   String
+  booking     Booking       @relation(fields: [bookingId], references: [id])
+  method      PayMethod
+  amount      Int
+  destination String // QR payload / VA no / account / deeplink
+  status      InvoiceStatus @default(PENDING)
+  expiresAt   DateTime
+}
+
+model Transaction {
+  id         String    @id @default(cuid())
+  bookingId  String    @unique
+  booking    Booking   @relation(fields: [bookingId], references: [id])
+  invoiceRef String    @unique
+  method     PayMethod
+  tarif      Int
+  adminFee   Int
+  discount   Int
+  total      Int
+  paidAt     DateTime
+  receiptNo  String    @unique
+}
+
+model Message {
+  id        Int       @id @default(autoincrement())
+  bookingId String
+  booking   Booking   @relation(fields: [bookingId], references: [id])
+  sender    Sender
+  body      String?
+  imagePath String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model SessionNote {
+  bookingId String   @id
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  summary   String
+  advice    String
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  expertId  String
+  expert    Expert   @relation(fields: [expertId], references: [id])
+  rating    Int
+  text      String?
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  bookingId String?
+  type      String // UNRESPONSIVE | HELPDESK | PROBLEM
+  body      String?
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,26 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="96" height="96" fill="#1E1E1E"/>
+<g id="sesuai-budget 1">
+<g id="Group">
+<path id="Vector" d="M23.09 81.65C10.37 81.65 4.01002 72.11 5.07002 62.57C6.13002 55.15 11.96 50.91 18.85 50.91C19.38 38.19 30.51 29.71 43.23 31.83C49.59 21.23 67.61 21.23 73.97 33.95C86.69 32.89 93.05 44.55 89.87 55.15C95.17 63.63 91.99 81.65 73.97 81.65H23.09Z" fill="url(#paint0_linear_613_757)"/>
+<path id="Vector_2" d="M23.09 81.65C10.37 81.65 4.01002 72.11 5.07002 62.57C6.13002 55.15 11.96 50.91 18.85 50.91C19.38 38.19 30.51 29.71 43.23 31.83C49.59 21.23 67.61 21.23 73.97 33.95C86.69 32.89 93.05 44.55 89.87 55.15C95.17 63.63 91.99 81.65 73.97 81.65H23.09Z" fill="url(#paint1_linear_613_757)"/>
+</g>
+<path id="Vector_3" d="M30 60V68C30 69.8565 31.8964 71.637 35.2721 72.9497C38.6477 74.2625 43.2261 75 48 75C52.7739 75 57.3523 74.2625 60.7279 72.9497C64.1036 71.637 66 69.8565 66 68V60H30Z" fill="#F3C24A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_4" d="M48 67C57.9411 67 66 63.866 66 60C66 56.134 57.9411 53 48 53C38.0589 53 30 56.134 30 60C30 63.866 38.0589 67 48 67Z" fill="#F9D46C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_5" d="M30 51V59C30 60.8565 31.8964 62.637 35.2721 63.9497C38.6477 65.2625 43.2261 66 48 66C52.7739 66 57.3523 65.2625 60.7279 63.9497C64.1036 62.637 66 60.8565 66 59V51H30Z" fill="#F3C24A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_6" d="M48 58C57.9411 58 66 54.866 66 51C66 47.134 57.9411 44 48 44C38.0589 44 30 47.134 30 51C30 54.866 38.0589 58 48 58Z" fill="#F9D46C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_7" d="M30 42V50C30 51.8565 31.8964 53.637 35.2721 54.9497C38.6477 56.2625 43.2261 57 48 57C52.7739 57 57.3523 56.2625 60.7279 54.9497C64.1036 53.637 66 51.8565 66 50V42H30Z" fill="#F3C24A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_8" d="M48 49C57.9411 49 66 45.866 66 42C66 38.134 57.9411 35 48 35C38.0589 35 30 38.134 30 42C30 45.866 38.0589 49 48 49Z" fill="#F9D46C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_9" d="M40 41.5C43 43.6 49 44 54 42.6" stroke-width="2" stroke-linecap="round" stroke="#FFFCF5"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_613_757" x1="10.37" y1="26.53" x2="84.57" y2="85.89" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F7FBFF"/>
+<stop offset="1" stop-color="#A3D1FB"/>
+</linearGradient>
+<linearGradient id="paint1_linear_613_757" x1="90.93" y1="24.41" x2="27.33" y2="81.65" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFDF8C" stop-opacity="0.34"/>
+<stop offset="0.6" stop-color="#FFDF8C" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>

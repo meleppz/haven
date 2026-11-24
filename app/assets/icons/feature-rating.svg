@@ -1,0 +1,22 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="96" height="96" fill="#1E1E1E"/>
+<g id="rating-tertinggi 1">
+<g id="Group">
+<path id="Vector" d="M23.09 81.65C10.37 81.65 4.01002 72.11 5.07002 62.57C6.13002 55.15 11.96 50.91 18.85 50.91C19.38 38.19 30.51 29.71 43.23 31.83C49.59 21.23 67.61 21.23 73.97 33.95C86.69 32.89 93.05 44.55 89.87 55.15C95.17 63.63 91.99 81.65 73.97 81.65H23.09Z" fill="url(#paint0_linear_613_757)"/>
+<path id="Vector_2" d="M23.09 81.65C10.37 81.65 4.01002 72.11 5.07002 62.57C6.13002 55.15 11.96 50.91 18.85 50.91C19.38 38.19 30.51 29.71 43.23 31.83C49.59 21.23 67.61 21.23 73.97 33.95C86.69 32.89 93.05 44.55 89.87 55.15C95.17 63.63 91.99 81.65 73.97 81.65H23.09Z" fill="url(#paint1_linear_613_757)"/>
+</g>
+<path id="Vector_3" d="M45.52 33.3399C47.1734 30.4466 48.8267 30.4466 50.48 33.3399L52.87 37.5399C54.5234 40.4399 56.98 42.2266 60.24 42.8999L64.98 43.8799C68.24 44.5533 68.75 46.1233 66.51 48.5899L63.25 52.1699C61.01 54.6299 60.0734 57.5166 60.44 60.8299L60.97 65.6399C61.3367 68.9533 60 69.9233 56.96 68.5499L52.56 66.5599C49.52 65.1866 46.48 65.1866 43.44 66.5599L39.04 68.5499C36 69.9233 34.6634 68.9533 35.03 65.6399L35.56 60.8299C35.9267 57.5166 34.99 54.6299 32.75 52.1699L29.49 48.5899C27.25 46.1233 27.76 44.5533 31.02 43.8799L35.76 42.8999C39.02 42.2266 41.4767 40.4399 43.13 37.5399L45.52 33.3399Z" fill="#F9D46C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_4" d="M38.5 47L43 43.5" stroke-width="2.6" stroke-linecap="round" stroke="#FFFCF5"/>
+<path id="Vector_5" d="M73 39C74.6569 39 76 37.6569 76 36C76 34.3431 74.6569 33 73 33C71.3431 33 70 34.3431 70 36C70 37.6569 71.3431 39 73 39Z" fill="#F3C24A"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_613_757" x1="10.37" y1="26.53" x2="84.57" y2="85.89" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F7FBFF"/>
+<stop offset="1" stop-color="#A3D1FB"/>
+</linearGradient>
+<linearGradient id="paint1_linear_613_757" x1="90.93" y1="24.41" x2="27.33" y2="81.65" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFDF8C" stop-opacity="0.34"/>
+<stop offset="0.6" stop-color="#FFDF8C" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>

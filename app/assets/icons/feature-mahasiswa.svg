@@ -1,0 +1,23 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="96" height="96" fill="#1E1E1E"/>
+<g id="khusus-mahasiswa 1">
+<g id="Group">
+<path id="Vector" d="M23.09 81.65C10.37 81.65 4.01002 72.11 5.07002 62.57C6.13002 55.15 11.96 50.91 18.85 50.91C19.38 38.19 30.51 29.71 43.23 31.83C49.59 21.23 67.61 21.23 73.97 33.95C86.69 32.89 93.05 44.55 89.87 55.15C95.17 63.63 91.99 81.65 73.97 81.65H23.09Z" fill="url(#paint0_linear_613_757)"/>
+<path id="Vector_2" d="M23.09 81.65C10.37 81.65 4.01002 72.11 5.07002 62.57C6.13002 55.15 11.96 50.91 18.85 50.91C19.38 38.19 30.51 29.71 43.23 31.83C49.59 21.23 67.61 21.23 73.97 33.95C86.69 32.89 93.05 44.55 89.87 55.15C95.17 63.63 91.99 81.65 73.97 81.65H23.09Z" fill="url(#paint1_linear_613_757)"/>
+</g>
+<path id="Vector_3" d="M32 51V62C32 67 39 71 48 71C57 71 64 67 64 62V51L48 58L32 51Z" fill="#CFE7FD" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_4" d="M42.46 34.2895C46.1533 32.7629 49.8466 32.7629 53.54 34.2895L71.46 41.7095C75.1533 43.2362 75.1733 44.8162 71.52 46.4495L53.48 54.5495C49.8266 56.1829 46.1733 56.1829 42.52 54.5495L24.48 46.4495C20.8266 44.8162 20.8466 43.2362 24.54 41.7095L42.46 34.2895Z" fill="#FFFCF5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_5" d="M75 46V62" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+<path id="Vector_6" d="M75 69C77.2091 69 79 67.2091 79 65C79 62.7909 77.2091 61 75 61C72.7909 61 71 62.7909 71 65C71 67.2091 72.7909 69 75 69Z" fill="#F9D46C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke="#2F6FA6"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_613_757" x1="10.37" y1="26.53" x2="84.57" y2="85.89" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F7FBFF"/>
+<stop offset="1" stop-color="#A3D1FB"/>
+</linearGradient>
+<linearGradient id="paint1_linear_613_757" x1="90.93" y1="24.41" x2="27.33" y2="81.65" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFDF8C" stop-opacity="0.34"/>
+<stop offset="0.6" stop-color="#FFDF8C" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>
