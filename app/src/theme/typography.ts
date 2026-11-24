@@ -1,9 +1,11 @@
 import type { TextStyle } from "react-native";
 
-// One token for the heading family so swapping Nunito -> Qanelas Soft is a one-line change (§4.4).
+// Headings use Qanelas Soft (files in assets/fonts, loaded in the root layout). Kept behind one token
+// so a font swap stays a one-line change (handoff 4.4). Qanelas Regular is used for toast body text.
 export const fontFamily = {
-  headingBold: "Nunito_700Bold",
-  headingSemibold: "Nunito_600SemiBold",
+  headingBold: "QanelasSoft_Bold",
+  headingSemibold: "QanelasSoft_SemiBold",
+  bodyAlt: "Qanelas_Regular",
   body: "Figtree_400Regular",
   bodyMedium: "Figtree_500Medium",
   bodySemibold: "Figtree_600SemiBold",

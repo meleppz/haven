@@ -122,7 +122,7 @@ export function Toast({ kind = "info", title, body, time = "Now" }: { kind?: Toa
           {title}
         </Text>
         {body ? (
-          <Text variant="bodyS" color={colors.text.primary}>
+          <Text variant="bodyS" color={colors.text.primary} style={{ fontFamily: fontFamily.bodyAlt }}>
             {body}
           </Text>
         ) : null}

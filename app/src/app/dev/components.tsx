@@ -56,6 +56,7 @@ export default function ComponentGallery() {
             <Mascot name="annoyed" size={72} />
             <Mascot name="celebrate" size={72} />
             <Mascot name="happySmall" size={72} />
+            <Mascot name="student" size={72} />
           </View>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, backgroundColor: colors.surface.muted, padding: 12, borderRadius: 12 }}>
             {(["hariIni", "ahli247", "promo", "mahasiswa", "cariAhli", "rating", "riwayat", "bantuan"] as const).map((n) => (
