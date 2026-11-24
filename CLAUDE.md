@@ -6,9 +6,11 @@ Mental-health teleconsultation prototype for Indonesian students and young worke
 
 **[docs/handoff.md](docs/handoff.md) is the full spec** (screens §6, business rules §7, data model §8, API §9, simulation §10, seed §11, phases §12, decided conflicts §13). Re-read the relevant section before building any screen or rule. Design PDFs live beside it in `docs/`.
 
+**Start with its "Build status" section at the top**: Phases 0–3 are done (server is complete; the app has auth, assessment, Beranda, catalog, expert detail), **Phase 4 is next**. That section lists what exists, the traps already hit (typed-route quirks, Figma export quirks, lint rules), and which Figma links to ask the user for before each phase.
+
 ## Key rules
 
-- **Phases:** build in the order of handoff §12 (Phase 0 to 7). Each phase ends runnable; commit at phase boundaries and summarize what works.
+- **Phases:** build in the order of handoff §12 (Phase 0 to 7). Each phase ends runnable; summarize what works. **Do not commit or push unless the user asks**: they write their own commit messages. After finishing a phase, update the "Build status" section of `docs/handoff.md`.
 - **Source precedence:** Figma (via MCP) decides layout and visuals, then the M4 PDF. The handoff decides behavior, rules, states, and anything Figma doesn't show. Conflicts are already resolved in §13; don't re-litigate them silently.
 - **Ask the user before:** changing the stack, adding a paid or cloud service, dropping a screen, deviating visibly from the hi-fi, or adding the crisis-resources entry (§13).
 - **Stack (fixed):** Expo (Expo Go only, no custom native modules), TypeScript strict, expo-router; server is Node + Express + Prisma + SQLite. Client app only; the expert side is a server-side "Ahli simulator". No real encryption claims outside UI copy.
@@ -31,4 +33,6 @@ Mental-health teleconsultation prototype for Indonesian students and young worke
 - App (from `app/`): `npx expo start`, `npx expo install <pkg>` (always, never `npm add`), `npx tsc --noEmit`, `npx expo lint`.
 - Server (from `server/`): `npm run dev`, `npm run db:reset`, `npm test`.
 - Phone networking: set `EXPO_PUBLIC_API_URL=http://<LAN-IP>:3000`; server binds `0.0.0.0`. `EXPO_PUBLIC_DEMO_MODE=1` and `DEMO_MODE=1` enable the dev menu and simulations.
-- Run typecheck and lint before declaring any task done.
+- Run typecheck and lint before declaring any task done. Lint uses strict React Compiler rules (no `setState` in effects, no `ref.current` in render).
+- Server tests: `npm test` in `server/` (89 tests). Regenerate Figma art with `npm run gen:art` / `npm run gen:icons` in `app/` (see handoff "Assets").
+- Figma: file key `Kc2HLkoteXoZwBK2BgCGtk`. Export mascots/icons as **SVG** (PNG bakes in a black frame background).

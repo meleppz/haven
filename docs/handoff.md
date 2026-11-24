@@ -11,6 +11,116 @@
 
 ---
 
+## Build status: read this first (updated after Phase 3)
+
+> **Phases 0–3 are DONE.** The server (Phase 1) is complete for *all* features. The app has auth, assessment, Beranda, catalog + filters, and expert detail. **Next: Phase 4 (book and pay).** Everything below this box describes what exists, how it was built, and the traps already hit, so you do not repeat them. The rest of this document is still the spec.
+
+### What is done
+
+| Phase | State | Notes |
+|---|---|---|
+| 0 Foundations | ✅ | Expo app, Figma tokens, fonts (Qanelas Soft + Figtree), component library, assets, server skeleton |
+| 1 Server core | ✅ | All of §7–§11 is implemented and tested (**89 vitest tests**, run `npm test` in `server/`) |
+| 2 Auth + assessment | ✅ | L81.1–5, L41.1–5 (incl. animated splashes), route guard, session restore |
+| 3 Discover | ✅ | L42 Beranda, L52 Katalog + Filter sheet, L51 Detail Psikolog (About / Appointment / Review) |
+| 4 Book and pay | ⬜ **next** | L82, L31, L83.1–3. The server side is finished; only the screens remain |
+| 5 Attend | ⬜ | L22.1–3, L91.1–2, L53.1–2. Server side finished |
+| 6 Account + polish | ⬜ | L84, L71, dev menu, FAQ, stubs. Server side finished |
+| 7 Acceptance run | ⬜ | The 7 M3 scenarios on a real phone |
+
+**Not verified on a real phone yet.** Everything was checked in a browser (Expo web at a 393×852 viewport) against the Figma frames, plus lint, `tsc`, an Android bundle export and the server tests. Keyboard behavior, safe areas, camera and animation timing still need a device pass (Expo Go).
+
+### Repo map (what actually exists)
+
+```
+app/src/app/                      expo-router routes (template convention: routes live in src/app, not app/app)
+  _layout.tsx                     fonts, QueryClient, ToastProvider, Stack.Protected route guard
+  (auth)/  index login register otp name password        L81.1–5   (index just redirects to /login)
+  assessment/  index age occupation concerns done        L41.1–5   (index + done are the animated splashes)
+  (tabs)/  index search sessions messages profile        Beranda + Cari are REAL; sessions/messages/profile are placeholders
+  experts/[id].tsx                L51 Detail Psikolog
+  booking/[expertId].tsx          STUB for L82: receives { expertId, slotId?, date? }. Replace it in Phase 4
+  dev/components.tsx              component gallery (demo mode). Not updated with the newest components
+app/src/components/               design system (one RN component per Figma component, variants as props)
+  Text Button Chip(+ChipGroup, SpecialtyChip) TextField(+SearchField) Toggle Radio Checkbox Card Label Badge
+  SegmentedTabs ProgressDashes Toast(+ToastProvider/useToast) DateNavigator/WeekStrip/DateSelector/SlotChip
+  BottomNavbar Header Avatar StatTile Accordion BottomSheet Mascot FeatureIcon Backdrop AuthLayouts OtpInput
+  SplashScene States(Skeleton/EmptyState/ErrorState) ExpertCards(ExpertCard/ExpertMiniCard/ExpertPhoto/RatingLine)
+  RangeSlider Placeholder
+app/src/features/                 auth (store, GoogleSignIn sheet), assessment, catalog (filters store + FilterSheet), home, experts
+app/src/api/                      typed API functions + react-query hooks (auth.ts, me.ts, experts.ts)
+app/src/lib/                      api.ts (fetch client), format.ts (Rp/dates/WIB), validators.ts, routes.ts, config.ts,
+                                  art.ts + ui-icons.ts (GENERATED, see "Assets"), storage.ts (secure-store token)
+app/src/theme/                    tokens.ts (Figma variables), typography.ts, gradients.ts
+app/scripts/                      gen-art.mjs, gen-icons.mjs (npm run gen:art / gen:icons)
+app/assets/                       fonts/ mascot/*.svg icons/ icons/ui/*.svg images/ logos/*.png (payment logos)
+server/                           complete. See "Server" below
+```
+
+### Run it
+
+```
+# server (from server/)   needs a .env: copy .env.example (DATABASE_URL, PORT, DEMO_MODE=1)
+npm install && npx prisma generate && npx prisma migrate deploy && npm run db:seed && npm run dev
+
+# app (from app/)
+npm install
+$env:EXPO_PUBLIC_API_URL="http://<LAN-IP>:3000"; $env:EXPO_PUBLIC_DEMO_MODE="1"; npx expo start -c
+```
+Demo login: `choso@haven.id` / `haven123`. OTP is always `1234`. A phone cannot reach `localhost`: use the machine's real LAN IP (`ipconfig`, the Wi-Fi adapter). If the app says "Server belum terjangkau", the usual cause is the literal text `<LAN-IP>` or a campus Wi-Fi that isolates devices (use a phone hotspot).
+
+### Server (finished): what you can rely on
+
+- Every endpoint in §9 exists, plus `GET /auth/google/accounts`, `GET /sessions/:id/state` (expert connected? last message times, `unresponsiveAfterSec`), `GET /payments/:ref` (poll) and `/dev/*` (demo mode only: clock, reset, gateway pay/fail, verify student, start a session in 10 min, expert-end, silence expert). Read `server/src/routes/index.ts` and `routes/dev.ts` for the exact shapes; errors are always `{ error: { code, message, fields? } }` with warm Indonesian messages: show `message` as-is.
+- Business rules live in `server/src/flows/*` (task services SC-11/12/13) and `services/*`, with BR/SC/FA ids in comments. **Do not re-implement rules in the app**: the app only displays what the server decides (join window, prices, hold expiry, penalties, masking). Use `serverNow` (also the `x-server-now` header) for countdowns, never the device clock.
+- Booking → payment: `POST /bookings` (201 | 409 `SLOT_CONFLICT` | 422 with `fields`) → `GET /bookings/:id/payment-summary` → `POST /bookings/:id/invoice {method}` → poll `GET /payments/:invoiceRef` every 3 s → (demo) `POST /dev/gateway/:ref/pay {outcome}` → status `PAID`. Switching method cancels the previous invoice. An expired hold gives `BOOKING_EXPIRED`.
+- Cancel/reschedule (BR-18): `POST /bookings/:id/cancel` answers **409 `PENALTY_CONFIRM_REQUIRED`** inside 48 h; show the warning sheet, then resend with `{confirmPenalty:true}`. Reschedule answers 403 `RESCHEDULE_TOO_LATE` inside 48 h.
+- Join (`POST /bookings/:id/join`) returns 403 with `code` = `NOT_OWNER | NOT_PAID | TOO_EARLY | ENDED`. Chat sending returns 403 `NOT_JOINED | ENDED`. The simulated expert replies 2–6 s after each client message (the app polls `GET /sessions/:id/messages?after=` every 2 s).
+- Student verification is multipart (`POST /me/student-verification`, fields `name`, `university`, `acceptTerms`, file field `proof`, jpg/png/pdf ≤ 10 MB) → `202` PENDING, auto-approved after ~2 s; `GET /me/student-verification` to poll; `POST /dev/me/verify-student` is instant.
+- Expert photos and the demo avatar are served from `server/public/` under `/static`; `photoUrl` is a path, use `photoSource()` from `api/experts.ts`.
+- The DB is SQLite via Prisma **7.10.1** with `@prisma/adapter-better-sqlite3`. After editing `prisma/schema.prisma` run `npx prisma migrate dev --name <x>` **and then `npx prisma generate`** (Prisma 7 does not generate on migrate). `npm run db:reset` (migrate reset + seed) is destructive: an AI agent is blocked from running it by Prisma's guard, so ask the user to run it. `npm run db:seed` alone wipes and reseeds without that guard.
+- Tests use their own `test.db`, a freezable clock (`clock.freeze`) and turn the timer-driven simulators off (`AHLI_ENABLED=0`). Add a test for any server change.
+
+### App conventions you must follow
+
+- **Figma is the visual source of truth.** File key `Kc2HLkoteXoZwBK2BgCGtk` ("Haven - IMK"); the hi-fi page is "Milestone 4 - High Fidelity" (`655:9`). The user pastes screen links; extract `node-id` (`730-2500` → `730:2500`). Workflow that worked: `get_metadata` for structure → `get_screenshot` (download with curl, then Read the image to *look* at it) → `get_design_context` on small sub-nodes for exact text styles, colors, radius, padding. Load the guidance first: read the MCP resource `skill://figma/figma-design-to-code/SKILL.md` and pass `skillNames: "resource:figma-design-to-code"`. Avoid calling `get_design_context` on frames that contain the mascot: it returns ~60 vector pieces. Download Figma image URLs immediately: they expire in 7 days.
+- **The Figma file has no variables.** Tokens were read from the "Design System Haven" board (`629:841`) and are in `theme/tokens.ts`. Components use **semantic tokens only**. Figma's names are swapped vs. this handoff: its "Button primary" is the yellow one and "Button secondary" the blue one. The app keeps the handoff naming (`primary` = blue CTA, `secondary` = yellow).
+- **Fonts:** Qanelas Soft (Bold/SemiBold) and Qanelas Regular are bundled in `assets/fonts` (they are a commercial font, so keep the repo private or check the license); Figtree comes from `@expo-google-fonts`. Family names live behind tokens in `theme/typography.ts`.
+- **Time:** everything shown is WIB (UTC+7). Use `lib/format.ts` (`rupiah`, `shortDateTime`, `relativeSession`, `relativeDate`, `dateChipLabel`); it does not use `Intl`.
+- **Loading / empty / error states** are required on every data screen: `Skeleton`, `EmptyState`, `ErrorState` in `components/States.tsx`. Errors show the server's message; network failures become "Koneksi ke server belum tersambung".
+- **Toasts:** `useToast().show({ kind, title, body })`.
+- **Adding a route that needs sign-in:** list it inside `<Stack.Protected guard={!!token}>` in `src/app/_layout.tsx`. Routes you do *not* list are reachable while signed out.
+- **Navigation hrefs:** the generated typed routes name two routes wrongly (`/(tabs)/index`, `/assessment/index`, which are *not* real URLs and render "Unmatched Route"). Use `HOME` and `ASSESSMENT_INTRO` from `lib/routes.ts` (real paths `/` and `/assessment`). Typed routes regenerate when you run `npx expo export` or start the dev server; run one before `tsc` after adding a route file.
+- **Expo SDK 58 changes often:** read `app/AGENTS.md`; fetch the versioned docs before using an Expo API. Install packages with `npx expo install <pkg>`.
+- **React Compiler lint rules are on and strict** (`npx expo lint` must pass): no `setState` inside `useEffect`, no reading/writing `ref.current` during render. Derive state instead, or key-remount a component (see `FilterSheet`, `experts/[id].tsx`).
+- **Do not commit unless the user asks.** The user writes their own commit messages.
+
+### Assets (Figma exports) and the generators
+
+- Figma frames have a solid `#1E1E1E` fill, so **PNG export bakes a black rectangle into mascots and icons**. Export those nodes as **SVG** (`download_assets` with `defaultFormat: "svg"`), save them as `assets/mascot/mascot-<name>.svg` or `assets/icons/feature-<name>.svg`, then run `npm run gen:art`: it strips that background and writes `src/lib/art.ts`. Render with `<Mascot name="…"/>` / `<FeatureIcon name="…"/>`. UI icons (Figma `vuesax`) go in `assets/icons/ui/*.svg` → `npm run gen:icons` → `uiIcons`. Colors are baked into the SVGs, so each state (outline/filled) is a separate file.
+- Every `Mascot` instance rewrites the SVG's internal ids (`components/Art.tsx`) because the exports reuse the same ids and collide when several screens are mounted.
+- Mascot poses available: `wave, celebrate, happySmall, sad, confused, annoyed, student`. **Still missing: `peek`** (Ruang Tunggu, Phase 5): use a clearly labeled placeholder until the user finds it in Figma. Pose-to-screen mapping is in §4.8.
+- Expert photos: the design only has a dog placeholder, used for every expert except Nadia (real photo). The detail hero shows the placeholder at its own size. Real photos can replace `server/public/photos/*` and the seed `photoUrl` values.
+- Payment logos (QRIS, BCA, GoPay, OVO, DANA) are PNGs in `assets/logos/` with a `paymentLogos` map in `lib/assets.ts`. They have a white background: place them on white cards.
+- Blurred background blobs (Figma ellipses with Gaussian blur) are drawn by `components/Backdrop.tsx` as radial gradients, because React Native has no blur filter.
+
+### Decisions made during Phases 0–3 (add to §13)
+
+See the extra rows at the end of §13. In short: Waktu filter chips added; "Isi Asesmen 2 Menit" (Figma copy) instead of "Lakukan…"; OTP title typo fixed; paying an invoice extends the unpaid hold; bottom sheet is a plain RN `Modal`; license label still unconfirmed.
+
+### What the next phases need from the user (Figma links) and from you
+
+Ask the user for these links *before* building each phase, one link per screen/state (the user copies "Copy link to selection"). Components already built are listed above; do not rebuild them.
+
+- **Phase 4:** L82 Pemesanan (full scroll), L31 Verifikasi Status Mahasiswa (form + "already verified" state), the 4 modals on the DS board (`700:807`, variants `700:806, 722:649, 725:1000, 725:1034, 725:1068, 725:1102, 725:1232, 725:1267`: sad "belum terverifikasi", happy "terverifikasi", confused "Keluar", annoyed "tidak merespon"), L83.1 Pembayaran, L83.2 Menunggu Pembayaran (QRIS and the other methods), L83.3 Pembayaran Berhasil, the "slot conflict" toast, the "waktu pembayaran habis" sheet.
+  Wire-up points left for you: the Beranda tile "Khusus mahasiswa" and the second info banner currently show a "Fitur ini segera hadir." toast: route them to L31 (or the "already verified" sheet). Replace `booking/[expertId].tsx`. Packages to add with `npx expo install`: `react-native-qrcode-svg`, `react-native-view-shot`, `expo-print`, `expo-sharing` (QR render + save, PDF receipt). `expo-document-picker` is already installed.
+- **Phase 5:** L22.1 Ruang Konsultasi (+ cancel/reschedule UI), L22.2 Ruang Tunggu (needs the `peek` mascot), L22.3 Video Call, L91.1 Pesan, L91.2 Chat Room (+ inactivity sheet), L53.1 Sesi Selesai, L53.2 Detail Konsultasi. `expo-camera` is already installed. The tab files `sessions.tsx` and `messages.tsx` are placeholders to replace; Beranda's "Jadwal Konsultasi" card already navigates to the sessions tab, and the 10-minute reminder toast (BR-20) is already in `(tabs)/index.tsx`.
+- **Phase 6:** L84 Profil, L71 Pengaturan + stub pages, the `/dev` menu (`DEMO_MODE`; the server endpoints it needs all exist). `profile.tsx` has a temporary "Keluar" button: move it into Pengaturan behind the `mascot-confused` sheet. The optional crisis-resources entry (§13) still needs the user's OK.
+- **Verification workflow that worked** (do this for each screen): start the API (`PORT=3056`) and `npx expo start --web --port 8099 -c` with `EXPO_PUBLIC_API_URL=http://localhost:3056`, open it in the Browser pane at 393×852, compare with the Figma screenshot, and drive the flows by clicking. Restart the web dev server after adding files (stale module cache). `web.output` is set to `single` in `app.json` for this; the product itself targets Expo Go.
+- **Web-only quirks** (not bugs on device): `Text` has `max-width:100%`, so overflowing labels need an explicit `maxWidth`; a dev-only React Navigation warning "ROUTE_NAMES_CHANGED not handled" appears after sign-in.
+
+---
+
 ## 0. How to work with this document
 
 - **Put the PDFs in the repo** at `docs/` (ask the user to drop them in if they're missing). The screen specs below cite PDF page numbers, so open those pages when you need visual detail.
@@ -791,11 +901,13 @@ All seeded times are **relative to seed time**, so a fresh seed always demos wel
 
 ## 12. Build plan (phases with acceptance criteria)
 
-**Phase 0: Foundations**
+> **Status:** Phases 0–3 ✅ done, Phases 4–7 ⬜ to do. See "Build status" at the top of this file.
+
+**Phase 0: Foundations** ✅
 Monorepo, Expo app with expo-router and TypeScript, fonts loaded, **theme tokens generated from the Figma variables** (§4, fallback values in §4.2), safe areas, core components (§4.7) built from their Figma components and shown on `/dev/components`, mascot and icon assets exported. Server skeleton with `/api/health`, Prisma + SQLite, `db:reset`.
 ✅ The app runs in Expo Go on a real phone, reaches the server over LAN, and the component gallery matches p.88–89.
 
-**Phase 1: Server core**
+**Phase 1: Server core** ✅ (89 tests, all the ✅ cases below are covered)
 Schema, seed, clock, auth, experts, slots, recommendations, bookings (BR-07/08/09), pricing (BR-10), mock gateway + webhook (BR-12), session gate (BR-13), messages, end/notes, reviews, masking (BR-15).
 ✅ `vitest` passes:
 - concurrent double booking gives one 201 and one 409
@@ -806,13 +918,13 @@ Schema, seed, clock, auth, experts, slots, recommendations, bookings (BR-07/08/0
 - the anonymous profile hides the real name and contacts
 - a review updates `ratingAvg`
 
-**Phase 2: Auth and assessment screens** (L81.x, L41.x) and the route guard.
+**Phase 2: Auth and assessment screens** (L81.x, L41.x) and the route guard. ✅
 ✅ A new user can register with OTP 1234, complete or skip the assessment, and land on Beranda. Logout/login works.
 
-**Phase 3: Discover** (tabs shell + navbar, L42, L52 + Filter, L51).
+**Phase 3: Discover** (tabs shell + navbar, L42, L52 + Filter, L51). ✅
 ✅ Every filter and sort changes results correctly. License, rating, and reviews are 1 tap from the catalog.
 
-**Phase 4: Book and pay** (L82, L31, L83.1–3).
+**Phase 4: Book and pay** (L82, L31, L83.1–3). ⬜ **NEXT**: start here.
 ✅ The booking flow takes ≤ 5 steps. The promo gate works. A slot conflict shows the toast. The QR countdown and expiry work. Simulated pay leads to the success screen and the receipt PDF can be shared.
 
 **Phase 5: Attend** (L22.1, L22.2, L22.3, L91.1, L91.2, L53.1, L53.2).
@@ -852,6 +964,17 @@ Plus: demonstrate the **S1 double-booking rejection** with two devices, or with 
 | 12 | The Beranda quick-access targets aren't defined. | Use the mapping in §6.3. |
 | 13 | Chat- and voice-mode entry isn't specified (the waiting room is camera-centric). | Chat goes straight to the Chat Room; voice uses the waiting room with the camera off. |
 | 14 | The hi-fi sample review text is placeholder-silly. | Write realistic, respectful seed reviews. |
+| 15 | Figma's "Button primary" is yellow and "Button secondary" is blue; this document says the opposite. | Visuals follow Figma exactly; the code keeps the handoff names (`primary` = blue, `secondary` = yellow). |
+| 16 | Intro CTA copy: Figma says "Isi Asesmen 2 Menit", §6.2 says "Lakukan Asesmen 2 Menit"; the OTP title has the typo "Masukan". | Use Figma's "Isi Asesmen 2 Menit" on the intro splash (the Beranda banner button says "Lakukan Asesmen 2 Menit", as in Figma); title is "Masukkan Kode OTP". |
+| 17 | L05 (assessment intro) and the "Terima Kasih sudah Berbagi" screen are the two "Splash" frames, each a start/end pair for a Smart Animate transition with no keyframe data. | `SplashScene` animates from the start state to the end state (circle expands, mascot rises while shrinking, text fades in). |
+| 18 | The filter sheet has no time-of-day group (see #4). | Added **Waktu** chips (Semua/Pagi/Siang/Malam/Akhir Pekan) in the same style, plus a small "Atur ulang" link in the sheet header. |
+| 19 | Beranda tile targets (§6.3) point to screens that do not exist yet. | Tiles open Cari with a preset filter; "Khusus mahasiswa" and the promo banner show a "segera hadir" toast until Phase 4. |
+| 20 | A paid invoice's 15-minute expiry can outlast the booking's 15-minute hold. | Creating an invoice extends `holdExpiresAt` to the invoice's expiry (server, `payment-flow.ts`). |
+| 21 | `Booking.slotId` was `@unique` in §8, so an expired/cancelled booking blocked the slot forever. | Now a normal index; exclusivity comes from the atomic `LOCKED` update (BR-08), covered by the concurrency tests. |
+| 22 | §2 suggests `@gorhom/bottom-sheet`. | `BottomSheet` and `FilterSheet` use RN `Modal` (no gesture/native dependency risk). Swap later only if drag-to-dismiss is wanted. |
+| 23 | §2 suggests a multi-slider library. | `RangeSlider` is a pure-JS PanResponder slider (Expo Go safe). |
+| 24 | Only one real expert photo exists in the design. | Nadia has it; all others use the design's placeholder image (served from `server/public`). |
+| 25 | License label (#6) is still **unconfirmed with the user**. | The API returns `licenseLabel` by type (psikolog `SIPP`, psikiater `STR`); the detail page shows "No. SIPP" for psychologists while the Figma frame shows "No. STR". One-line change in `services/experts.ts` once the user decides. |
 
 **Recommended addition (ask the user first):** Haven targets people who may be in distress, and the "Suicidal Thought" specialty appears in the hi-fi. Consider a small, non-intrusive "Butuh bantuan darurat?" entry in Pusat Bantuan/FAQ that points to Indonesian crisis resources. **Don't add it without the user's OK**, since it isn't in the design.
 
