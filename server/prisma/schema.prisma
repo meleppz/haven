@@ -117,13 +117,13 @@ model Expert {
 }
 
 model Slot {
-  id      String     @id @default(cuid())
+  id       String     @id @default(cuid())
   expertId String
-  expert  Expert     @relation(fields: [expertId], references: [id])
-  startAt DateTime
-  endAt   DateTime
-  status  SlotStatus @default(AVAILABLE)
-  booking Booking?
+  expert   Expert     @relation(fields: [expertId], references: [id])
+  startAt  DateTime
+  endAt    DateTime
+  status   SlotStatus @default(AVAILABLE)
+  bookings Booking[] // history: an expired or cancelled booking keeps its slotId; exclusivity comes from the atomic LOCKED update (BR-08)
 
   @@unique([expertId, startAt])
   @@index([expertId, startAt, status])
@@ -135,7 +135,7 @@ model Booking {
   client          Client        @relation(fields: [clientId], references: [id])
   expertId        String
   expert          Expert        @relation(fields: [expertId], references: [id])
-  slotId          String        @unique
+  slotId          String
   slot            Slot          @relation(fields: [slotId], references: [id])
   mode            Mode
   anonymous       Boolean
@@ -154,6 +154,9 @@ model Booking {
   messages        Message[]
   note            SessionNote?
   review          Review?
+
+  @@index([slotId])
+  @@index([clientId, status])
 }
 
 model Invoice {
