@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: layout.minTouch - 8,
+    minHeight: layout.minTouch, // 44px, matches the chips on the assessment screen
     ...shadow.card,
   },
   selected: { backgroundColor: colors.action.primary, borderColor: colors.action.primary },

@@ -1,9 +1,13 @@
+import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold } from "@expo-google-fonts/figtree";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold } from "@expo-google-fonts/figtree";
-import { useFonts } from "expo-font";
+import { ToastProvider } from "@/components";
+import { useAuth } from "@/features/auth/auth-store";
+import { queryClient } from "@/lib/query";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,16 +22,37 @@ export default function RootLayout() {
     QanelasSoft_SemiBold: require("../../assets/fonts/QanelasSoft-SemiBold.otf"),
     Qanelas_Regular: require("../../assets/fonts/Qanelas-Regular.otf"),
   });
+  const token = useAuth((s) => s.token);
+  const hydrated = useAuth((s) => s.hydrated);
 
+  // Restore the session (token from secure storage) on launch.
   useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
+    void useAuth.getState().hydrate();
+  }, []);
 
-  if (!loaded && !error) return null;
+  const ready = (loaded || !!error) && hydrated;
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) return null;
 
   return (
-    <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <ToastProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* Route guard (handoff §5): signed out -> login; signed in -> the app. */}
+            <Stack.Protected guard={!!token}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="assessment" />
+            </Stack.Protected>
+            <Stack.Protected guard={!token}>
+              <Stack.Screen name="(auth)" />
+            </Stack.Protected>
+          </Stack>
+        </ToastProvider>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

@@ -91,14 +91,14 @@ export function SegmentedTabs({ tabs, value, onChange }: { tabs: string[]; value
   );
 }
 
-// Breadcrumb for multi-step forms: current step secondary-400, others faint (handoff 4.7).
+// Figma "Crumbs": 45x4 pills, 4px apart, current = secondary-500, others secondary-100.
 export function ProgressDashes({ steps, current }: { steps: number; current: number }) {
   return (
-    <View style={{ flexDirection: "row", gap: 6, justifyContent: "center" }}>
+    <View style={{ flexDirection: "row", gap: 4, justifyContent: "center" }} accessibilityLabel={`Langkah ${current + 1} dari ${steps}`}>
       {Array.from({ length: steps }, (_, i) => (
         <View
           key={i}
-          style={{ width: 28, height: 4, borderRadius: 2, backgroundColor: i === current ? palette.secondary[400] : palette.neutral[300] }}
+          style={{ width: 45, height: 4, borderRadius: 100, backgroundColor: i === current ? palette.secondary[500] : palette.secondary[100] }}
         />
       ))}
     </View>

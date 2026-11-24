@@ -13,8 +13,9 @@ export const fontFamily = {
 } as const;
 
 export const typography = {
-  display: { fontFamily: fontFamily.headingBold, fontSize: 42, lineHeight: 52 },
-  h1: { fontFamily: fontFamily.headingBold, fontSize: 32, lineHeight: 40 },
+  // Figma: display 42/42 and h1 32 use -2% tracking (Masuk, Selamat datang di Haven!, Masukkan Kode OTP).
+  display: { fontFamily: fontFamily.headingBold, fontSize: 42, lineHeight: 44, letterSpacing: -0.84 },
+  h1: { fontFamily: fontFamily.headingBold, fontSize: 32, lineHeight: 36, letterSpacing: -0.64 },
   h2: { fontFamily: fontFamily.headingSemibold, fontSize: 24, lineHeight: 30 },
   h3: { fontFamily: fontFamily.headingSemibold, fontSize: 20, lineHeight: 25 },
   title: { fontFamily: fontFamily.bodySemibold, fontSize: 18, lineHeight: 24 },
