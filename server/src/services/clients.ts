@@ -2,7 +2,7 @@
 import bcrypt from "bcryptjs";
 import { config } from "../config.js";
 import { prisma } from "../db.js";
-import { badRequest, conflict, invalid, notFound, unauthorized } from "../lib/errors.js";
+import { badRequest, conflict, invalid, notFound } from "../lib/errors.js";
 import { parseList, toJsonList } from "../lib/json.js";
 import { DAY_MS } from "../lib/time.js";
 import { clock } from "../sim/clock.js";
@@ -47,7 +47,10 @@ export async function updateProfile(clientId: string, data: { name?: string; use
 
 export async function changePassword(clientId: string, current: string, next: string) {
   const c = await loadClient(clientId);
-  if (!(await bcrypt.compare(current, c.user.passwordHash))) throw unauthorized("Password lamamu belum cocok.");
+  // 422 with a field error (not 401): the person is signed in, only the field is wrong. A 401 would sign the app out.
+  if (!(await bcrypt.compare(current, c.user.passwordHash))) {
+    throw invalid("WRONG_PASSWORD", "Password lamamu belum cocok.", { currentPassword: "Password lamamu belum cocok" });
+  }
   await prisma.user.update({ where: { id: c.userId }, data: { passwordHash: await bcrypt.hash(next, 10) } });
 }
 
@@ -133,4 +136,44 @@ export async function forceVerifyStudent(clientId: string) {
     data: { studentStatus: "VERIFIED", studentVerifiedAt: clock.now(), university: (await loadClient(clientId)).university ?? "Institut Teknologi Bandung" },
   });
   return getVerification(clientId);
+}
+
+// ---- Account deletion (Figma modal "Hapus akun Haven?", added in Phase 6) ----
+
+/**
+ * Permanently removes the account and everything that belongs to it, in one transaction:
+ * future/held bookings release their slots, the person's reviews are taken out of the experts' ratings,
+ * then bookings (messages, notes, invoices, transactions, reviews), reports, the client and the user are deleted.
+ * A session that is in progress blocks deletion (end it first).
+ */
+export async function deleteAccount(clientId: string) {
+  const c = await loadClient(clientId);
+  const bookings = await prisma.booking.findMany({ where: { clientId }, include: { review: true } });
+  if (bookings.some((b) => b.status === "IN_SESSION")) {
+    throw conflict("SESSION_IN_PROGRESS", "Akhiri sesi konsultasi yang sedang berjalan dulu sebelum menghapus akun.");
+  }
+  const ids = bookings.map((b) => b.id);
+  const liveSlots = bookings.filter((b) => b.status === "PAID" || b.status === "AWAITING_PAYMENT").map((b) => b.slotId);
+
+  await prisma.$transaction(async (tx) => {
+    if (liveSlots.length) await tx.slot.updateMany({ where: { id: { in: liveSlots } }, data: { status: "AVAILABLE" } });
+    // BR-17 bookkeeping: the expert's average stays consistent without this person's reviews.
+    for (const b of bookings) {
+      if (!b.review) continue;
+      const e = await tx.expert.findUniqueOrThrow({ where: { id: b.review.expertId } });
+      const count = Math.max(0, e.ratingCount - 1);
+      const avg = count === 0 ? 0 : (e.ratingAvg * e.ratingCount - b.review.rating) / count;
+      await tx.expert.update({ where: { id: e.id }, data: { ratingCount: count, ratingAvg: avg } });
+    }
+    await tx.message.deleteMany({ where: { bookingId: { in: ids } } });
+    await tx.sessionNote.deleteMany({ where: { bookingId: { in: ids } } });
+    await tx.review.deleteMany({ where: { bookingId: { in: ids } } });
+    await tx.transaction.deleteMany({ where: { bookingId: { in: ids } } });
+    await tx.invoice.deleteMany({ where: { bookingId: { in: ids } } });
+    await tx.booking.deleteMany({ where: { clientId } });
+    await tx.report.deleteMany({ where: { clientId } });
+    await tx.client.delete({ where: { id: clientId } });
+    await tx.user.delete({ where: { id: c.userId } });
+  });
+  return { ok: true as const };
 }

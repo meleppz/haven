@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { BottomNavbar, type NavTab } from "@/components";
+import { BottomNavbar, WebScreenFade, type NavTab } from "@/components";
 
 // Bottom tabs (handoff §5): Beranda, Cari, Ruang Konsultasi, Pesan, Profil. The navbar is the Figma component.
 const ROUTE_TO_TAB: Record<string, NavTab> = {
@@ -14,7 +14,9 @@ const TAB_TO_ROUTE = Object.fromEntries(Object.entries(ROUTE_TO_TAB).map(([route
 export default function TabsLayout() {
   return (
     <Tabs
-      screenOptions={{ headerShown: false }}
+      // Tabs cross-fade instead of switching instantly (revision); on web each tab also fades in on first mount.
+      screenOptions={{ headerShown: false, animation: "fade" }}
+      screenLayout={({ children }) => <WebScreenFade>{children}</WebScreenFade>}
       tabBar={({ state, navigateToTab }) => (
         <BottomNavbar
           active={ROUTE_TO_TAB[state.routes[state.index].name] ?? "Beranda"}

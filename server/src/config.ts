@@ -11,7 +11,7 @@ export const config = {
   joinOpensMinutesBefore: 30, // BR-13
   rescheduleCutoffHours: 48, // BR-18
   slotMinutes: 60, // BR-06
-  unresponsiveAfterSec: Number(env.UNRESPONSIVE_AFTER_SEC ?? 60), // BR-19
+  unresponsiveAfterSec: Number(env.UNRESPONSIVE_AFTER_SEC ?? 600), // BR-19: 10 minutes without an expert reply (user decision)
 
   // Simulation (handoff §10).
   demoMode: env.DEMO_MODE === "1",

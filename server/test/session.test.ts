@@ -203,3 +203,30 @@ describe("BR-16 closing a session", () => {
     expect(res.status).toBe(409);
   });
 });
+
+describe("finished chats read the same everywhere (revision after Phase 6)", () => {
+  it("closing always writes one wording, and the chat list previews the last real bubble", async () => {
+    const { client, booking } = await paidBooking("CHAT");
+    clock.freeze(addMinutes(START, 5));
+    await join(client.token, booking.id);
+    await http().post(`/api/sessions/${booking.id}/messages`).set(auth(client.token)).send({ body: "Terima kasih, Bu" });
+    await http().post(`/api/sessions/${booking.id}/end`).set(auth(client.token));
+
+    const sys = await prisma.message.findFirstOrThrow({ where: { bookingId: booking.id, sender: "SYSTEM" } });
+    expect(sys.body).toBe("Sesi telah berakhir.");
+
+    const chats = (await http().get("/api/me/chats").set(auth(client.token))).body.items;
+    expect(chats).toHaveLength(1);
+    expect(chats[0].status).toBe("SELESAI");
+    expect(chats[0].lastMessage).toBe("Terima kasih, Bu");
+  });
+
+  it("a finished video session without chat bubbles is not listed as a chat", async () => {
+    const { client, booking } = await paidBooking("VIDEO");
+    clock.freeze(addMinutes(START, 5));
+    await join(client.token, booking.id);
+    await http().post(`/api/sessions/${booking.id}/end`).set(auth(client.token));
+    const chats = (await http().get("/api/me/chats").set(auth(client.token))).body.items;
+    expect(chats).toHaveLength(0);
+  });
+});

@@ -144,7 +144,7 @@ describe("assessment, profile and settings", () => {
     const renamed = await http().patch("/api/me").set(auth(a.token)).send({ displayName: "Bayangan", name: "Nama Baru" });
     expect(renamed.body).toMatchObject({ displayName: "Bayangan", name: "Nama Baru" });
 
-    expect((await http().post("/api/me/password").set(auth(a.token)).send({ currentPassword: "salah", newPassword: "passwordbaru1" })).status).toBe(401);
+    expect((await http().post("/api/me/password").set(auth(a.token)).send({ currentPassword: "salah", newPassword: "passwordbaru1" })).status).toBe(422);
     expect((await http().post("/api/me/password").set(auth(a.token)).send({ currentPassword: "password123", newPassword: "passwordbaru1" })).status).toBe(200);
     expect((await http().post("/api/auth/login").send({ identifier: a.email, password: "passwordbaru1" })).status).toBe(200);
   });

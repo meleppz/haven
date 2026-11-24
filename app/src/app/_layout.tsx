@@ -5,7 +5,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ToastProvider } from "@/components";
+import { fadeTransition, stackTransition, ToastProvider, WebScreenFade } from "@/components";
 import { useAuth } from "@/features/auth/auth-store";
 import { queryClient } from "@/lib/query";
 
@@ -41,13 +41,37 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <ToastProvider>
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack screenOptions={{ headerShown: false, ...stackTransition }} screenLayout={({ children }) => <WebScreenFade>{children}</WebScreenFade>}>
             {/* Route guard (handoff §5): signed out -> login; signed in -> the app. */}
             <Stack.Protected guard={!!token}>
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="assessment" />
+              <Stack.Screen name="assessment" options={fadeTransition} />
               <Stack.Screen name="experts/[id]" />
               <Stack.Screen name="booking/[expertId]" />
+              <Stack.Screen name="student-verification" />
+              <Stack.Screen name="payment/[bookingId]/index" />
+              <Stack.Screen name="payment/[bookingId]/pending" />
+              {/* The booking is paid: no swipe back into the payment flow. */}
+              <Stack.Screen name="payment/[bookingId]/success" options={{ ...fadeTransition, gestureEnabled: false }} />
+              <Stack.Screen name="reschedule/[bookingId]" />
+              <Stack.Screen name="history/index" />
+              <Stack.Screen name="history/[bookingId]" />
+              <Stack.Screen name="session/[bookingId]/waiting" />
+              <Stack.Screen name="session/[bookingId]/call" options={fadeTransition} />
+              <Stack.Screen name="session/[bookingId]/chat" />
+              {/* The session is over: no swipe back into the call. */}
+              <Stack.Screen name="session/[bookingId]/done" options={{ ...fadeTransition, gestureEnabled: false }} />
+              <Stack.Screen name="settings/index" />
+              <Stack.Screen name="settings/edit-profile" />
+              <Stack.Screen name="settings/password" />
+              <Stack.Screen name="settings/notifications" />
+              <Stack.Screen name="settings/help" />
+              <Stack.Screen name="settings/about" />
+              <Stack.Screen name="settings/privacy" />
+              <Stack.Screen name="settings/activity" />
+              <Stack.Screen name="support" />
+              <Stack.Screen name="dev/index" />
+              <Stack.Screen name="dev/components" />
             </Stack.Protected>
             <Stack.Protected guard={!token}>
               <Stack.Screen name="(auth)" />

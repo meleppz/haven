@@ -48,3 +48,41 @@ export function relativeDate(iso: string, now: Date = new Date()) {
 
 /** Display label for a consultation mode. */
 export const MODE_LABEL = { CHAT: "Chat", VOICE: "Voice Call", VIDEO: "Video Call" } as const;
+
+const MONTH_LONG = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+/** "23 November 2026" (WIB). */
+export function longDate(iso: string) {
+  const d = wib(iso);
+  return `${d.getUTCDate()} ${MONTH_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+/** "28/08/2026" (WIB): history cards and Detail Konsultasi. */
+export function slashDate(iso: string) {
+  const d = wib(iso);
+  return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+}
+
+/** "20:20" (WIB): chat bubbles and the chat list. */
+export function clockTime(iso: string) {
+  const d = wib(iso);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+/** "YYYY-MM-DD" in WIB, to match booking.slot.date. */
+export const wibDateKey = (iso: string | Date) => {
+  const d = wib(iso);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+};
+
+/** 75 -> "01:15"; 3725 -> "1:02:05". Negative values show 00:00. */
+export function duration(totalSec: number) {
+  const s = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(s / 3600);
+  const mm = pad(Math.floor((s % 3600) / 60));
+  const ss = pad(s % 60);
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+/** Mode label used on session and history cards ("Mode : Obrolan Chat"). */
+export const MODE_LONG = { CHAT: "Obrolan Chat", VOICE: "Panggilan Suara", VIDEO: "Panggilan Video" } as const;

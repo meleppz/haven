@@ -71,7 +71,7 @@ export function useRecommendations() {
 export const useExpert = (id: string) => useQuery({ queryKey: ["expert", id], queryFn: () => api<ExpertDetail>(`/experts/${id}`) });
 
 export const useSlots = (id: string, date: string) =>
-  useQuery({ queryKey: ["slots", id, date], queryFn: () => api<{ date: string; slots: Slot[] }>(`/experts/${id}/slots?date=${date}`) });
+  useQuery({ queryKey: ["slots", id, date], queryFn: () => api<{ date: string; slots: Slot[] }>(`/experts/${id}/slots?date=${date}`), enabled: !!id });
 
 export function useReviews(id: string) {
   return useInfiniteQuery({

@@ -6,7 +6,7 @@ Mental-health teleconsultation prototype for Indonesian students and young worke
 
 **[docs/handoff.md](docs/handoff.md) is the full spec** (screens §6, business rules §7, data model §8, API §9, simulation §10, seed §11, phases §12, decided conflicts §13). Re-read the relevant section before building any screen or rule. Design PDFs live beside it in `docs/`.
 
-**Start with its "Build status" section at the top**: Phases 0–3 are done (server is complete; the app has auth, assessment, Beranda, catalog, expert detail), **Phase 4 is next**. That section lists what exists, the traps already hit (typed-route quirks, Figma export quirks, lint rules), and which Figma links to ask the user for before each phase.
+**Start with its "Build status" section at the top**: Phases 0–6 are done (every screen exists, plus the `/dev` demo menu), **Phase 7 (acceptance run on a real phone) is next**. That section lists what exists, the traps already hit (typed-route quirks, Figma export quirks, lint rules), and which Figma links to ask the user for before each phase.
 
 ## Key rules
 
@@ -34,5 +34,5 @@ Mental-health teleconsultation prototype for Indonesian students and young worke
 - Server (from `server/`): `npm run dev`, `npm run db:reset`, `npm test`.
 - Phone networking: set `EXPO_PUBLIC_API_URL=http://<LAN-IP>:3000`; server binds `0.0.0.0`. `EXPO_PUBLIC_DEMO_MODE=1` and `DEMO_MODE=1` enable the dev menu and simulations.
 - Run typecheck and lint before declaring any task done. Lint uses strict React Compiler rules (no `setState` in effects, no `ref.current` in render).
-- Server tests: `npm test` in `server/` (89 tests). Regenerate Figma art with `npm run gen:art` / `npm run gen:icons` in `app/` (see handoff "Assets").
+- Server tests: `npm test` in `server/` (93 tests). Regenerate Figma art with `npm run gen:art` / `npm run gen:icons` in `app/` (see handoff "Assets").
 - Figma: file key `Kc2HLkoteXoZwBK2BgCGtk`. Export mascots/icons as **SVG** (PNG bakes in a black frame background).

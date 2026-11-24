@@ -44,6 +44,15 @@ export const colors = {
     highlight: p.secondary[800],
     highlightStrong: p.secondary[700], // "Konsultasi dalam 7 hari" (Figma secondary-700)
     error: p.danger[800],
+    section: p.primary[800], // Phase 4 section titles, card titles, price rows ("Ahli", "Rincian Pembayaran")
+    muted: "#8B9195", // license line on the booking expert card (not a palette step)
+    accent: p.secondary[500], // "Unggah Dokumen" file button
+    methodHint: "rgba(17,106,178,0.7)", // "Bank BCA" under a payment method (primary-800 at 70%)
+    success: p.success[800], // "file attached" on L31
+    danger: p.danger[700], // "Dimulai dalam 10 menit" on the session card
+    meta: p.neutral[700], // dates and "Mode : …" on history cards
+    bubbleTime: p.neutral[100], // time inside the expert's (dark) chat bubble
+    caption: "rgba(46,51,55,0.5)", // small helper under a settings toggle (neutral-900 at 50%)
   },
   surface: {
     page: p.neutral[0],
@@ -53,8 +62,29 @@ export const colors = {
     priceTag: p.secondary[100],
     dateBar: p.secondary[200], // Figma Kalender bar
     daySelected: p.neutral[300],
+    header: p.neutral[300], // Figma page header band (under its blurred blobs)
+    payBar: p.secondary[200], // sticky "Total / Bayar" footer on Pembayaran
+    qr: p.neutral[0], // QR codes always sit on white
+    call: p.primary[900], // call control buttons (L23/L24)
+    callOff: p.neutral[800], // a control that is switched off (camera off, mic muted)
+    callBar: "rgba(250,250,250,0.5)", // translucent control bar on the video call
+    callStage: p.primary[900], // behind the expert feed / camera preview
+    bubbleExpert: p.primary[900], // chat: expert bubble
+    bubbleClient: p.neutral[300], // chat: client bubble
+    banner: p.secondary[300], // "Konsultasi dimulai 10 menit lagi" pill
+    flipButton: "rgba(26,127,209,0.36)", // camera-flip button over a preview (primary-700 at 36%)
+    crisis: p.danger[50], // "Butuh bantuan darurat?" card
+    statTile: "rgba(254,225,152,0.8)", // Profil stat tiles (secondary-200 at 80%)
+    connecting: "rgba(10,72,122,0.35)", // dim over the expert feed while "Menghubungkan…" (primary-900 at 35%)
   },
   border: {
+    divider: p.neutral[400], // "Rincian Pembayaran" rule
+    dividerSoft: "rgba(47,111,166,0.2)", // rule inside the toggle / radio cards
+    selected: p.primary[500], // selected payment method card
+    field: p.neutral[400], // "Unggah Dokumen" file field
+    success: p.success[800], // file field once a document is attached
+    crisis: p.danger[200],
+    faqAnswer: "rgba(17,106,178,0.4)", // rule left of an open FAQ answer (primary-800 at 40%)
     default: p.neutral[300],
     focus: p.secondary[300],
     error: p.danger[600],

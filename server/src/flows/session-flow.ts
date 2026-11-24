@@ -109,9 +109,11 @@ export async function listMessages(clientId: string, bookingId: string, after = 
 export async function listChats(clientId: string) {
   const rows = await prisma.booking.findMany({
     where: { clientId, status: { in: ["IN_SESSION", "COMPLETED"] } },
-    include: { expert: true, slot: true, messages: { orderBy: { id: "desc" }, take: 1 } },
+    // The preview is the last real chat bubble (as in Figma L25); the closing SYSTEM line is not a message.
+    include: { expert: true, slot: true, messages: { where: { sender: { not: "SYSTEM" } }, orderBy: { id: "desc" }, take: 1 } },
   });
   return rows
+    // A finished session only appears if real chat bubbles were exchanged, so every row previews its last bubble.
     .filter((b) => b.status === "IN_SESSION" || b.messages.length > 0)
     .map((b) => {
       const last = b.messages[0];
@@ -135,6 +137,8 @@ export async function reportUnresponsive(clientId: string, bookingId: string) {
 
 // ---- Closing (BR-16) ----
 
+export const SESSION_ENDED_TEXT = "Sesi telah berakhir.";
+
 /**
  * BR-16 [FA-35..37, S5 `tutupSesiKonsultasi`]: a session closes when the user ends it, when the Ahli simulator ends it,
  * or automatically at slot end. Saves COMPLETED + endedAt + durationMinutes, and the expert's notes. Idempotent.
@@ -155,7 +159,8 @@ export async function closeSession(bookingId: string, closedBy: "client" | "expe
     await tx.booking.update({ where: { id: bookingId }, data: { status: "COMPLETED", endedAt, durationMinutes } });
     await tx.sessionNote.upsert({ where: { bookingId }, create: { bookingId, ...note }, update: {} });
     await tx.message.create({
-      data: { bookingId, sender: "SYSTEM", body: closedBy === "client" ? "Sesi telah diakhiri." : "Sesi telah berakhir.", createdAt: endedAt },
+      // One wording however the session closed (user revision after Phase 6).
+      data: { bookingId, sender: "SYSTEM", body: SESSION_ENDED_TEXT, createdAt: endedAt },
     });
   });
   ahli.clear(bookingId);

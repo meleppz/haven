@@ -3,7 +3,7 @@
 //
 // Why this exists: Figma frames carry a solid #1E1E1E fill, which the SVG export includes as the FIRST <rect>. PNG export
 // bakes that dark rectangle into the image. We export SVG, strip that rectangle here, and render with react-native-svg.
-// Exports taken from inside a screen can also carry that screen's page-color rectangle (393x852); it is stripped too.
+// Exports taken from inside a screen can also carry that screen's page-color rectangle (393x852 or 390x844); it is stripped too.
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,7 +22,7 @@ function load(dir, prefix) {
       const before = svg.length;
       svg = svg.replace(/<rect[^>]*fill="#1E1E1E"[^>]*\/>\s*/i, "");
       if (svg.length === before) throw new Error(`background rect (#1E1E1E) not found in ${f}: export the node as SVG from Figma`);
-      svg = svg.replace(/<rect[^>]*height="852"[^>]*\/>\s*/, "");
+      svg = svg.replace(/<rect[^>]*height="(852|844)"[^>]*\/>\s*/, ""); // 393x852 or 390x844 screen frames
       const m = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
       let name = camel(f.replace(prefix, "").replace(".svg", ""));
       if (name === "247") name = "ahli247"; // "feature-24-7.svg" -> a valid identifier

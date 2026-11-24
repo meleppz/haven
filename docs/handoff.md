@@ -11,9 +11,9 @@
 
 ---
 
-## Build status: read this first (updated after Phase 3)
+## Build status: read this first (updated after Phase 6)
 
-> **Phases 0–3 are DONE.** The server (Phase 1) is complete for *all* features. The app has auth, assessment, Beranda, catalog + filters, and expert detail. **Next: Phase 4 (book and pay).** Everything below this box describes what exists, how it was built, and the traps already hit, so you do not repeat them. The rest of this document is still the spec.
+> **Phases 0–6 are DONE.** Every screen in the inventory exists: auth, assessment, Beranda, catalog + filters, expert detail, booking, student verification, payment, the session flow (Ruang Konsultasi, waiting room, video call, chat, Sesi Selesai, history), Profil, Pengaturan with its sub-pages, and the `/dev` demo menu. **Next: Phase 7 (acceptance run on a real phone).** Everything below this box describes what exists, how it was built, and the traps already hit, so you do not repeat them. The rest of this document is still the spec.
 
 ### What is done
 
@@ -23,10 +23,10 @@
 | 1 Server core | ✅ | All of §7–§11 is implemented and tested (**89 vitest tests**, run `npm test` in `server/`) |
 | 2 Auth + assessment | ✅ | L81.1–5, L41.1–5 (incl. animated splashes), route guard, session restore |
 | 3 Discover | ✅ | L42 Beranda, L52 Katalog + Filter sheet, L51 Detail Psikolog (About / Appointment / Review) |
-| 4 Book and pay | ⬜ **next** | L82, L31, L83.1–3. The server side is finished; only the screens remain |
-| 5 Attend | ⬜ | L22.1–3, L91.1–2, L53.1–2. Server side finished |
-| 6 Account + polish | ⬜ | L84, L71, dev menu, FAQ, stubs. Server side finished |
-| 7 Acceptance run | ⬜ | The 7 M3 scenarios on a real phone |
+| 4 Book and pay | ✅ | L82 Pemesanan, L31 Verifikasi (form, pending, verified state, success sheet), L83.1 Pembayaran, L83.2 Menunggu (QRIS + VA/transfer/e-wallet), L83.3 Berhasil (splash + PDF receipt) |
+| 5 Attend | ✅ | L22.1 Ruang Konsultasi (+ cancel / Ganti Jadwal), L22.2 Ruang Tunggu, L22.3 Video Call, L91.1 Pesan, L91.2 Chat Room (+ inactivity sheet), L53.1 Sesi Selesai + ulasan, L53.2 Detail, Riwayat Konsultasi |
+| 6 Account + polish | ✅ | L84 Profil (stats, FAQ, helpdesk/report form), L71 Pengaturan (+ Edit Informasi Personal, Ganti Kata Sandi, Notifikasi, Pusat Bantuan, Tentang Haven, Privasi dan Keamanan with Hapus Akun, Aktivitas Akun), all Figma modals, `/dev` menu |
+| 7 Acceptance run | ⬜ **next** | The 7 M3 scenarios on a real phone |
 
 **Not verified on a real phone yet.** Everything was checked in a browser (Expo web at a 393×852 viewport) against the Figma frames, plus lint, `tsc`, an Android bundle export and the server tests. Keyboard behavior, safe areas, camera and animation timing still need a device pass (Expo Go).
 
@@ -39,7 +39,9 @@ app/src/app/                      expo-router routes (template convention: route
   assessment/  index age occupation concerns done        L41.1–5   (index + done are the animated splashes)
   (tabs)/  index search sessions messages profile        Beranda + Cari are REAL; sessions/messages/profile are placeholders
   experts/[id].tsx                L51 Detail Psikolog
-  booking/[expertId].tsx          STUB for L82: receives { expertId, slotId?, date? }. Replace it in Phase 4
+  booking/[expertId].tsx          L82 Pemesanan (params { expertId, slotId?, date? })
+  student-verification.tsx        L31 (param from=booking changes the CTA to "Kembali ke Halaman Pemesanan")
+  payment/[bookingId]/            index = L83.1, pending?ref= = L83.2, success?ref= = L83.3
   dev/components.tsx              component gallery (demo mode). Not updated with the newest components
 app/src/components/               design system (one RN component per Figma component, variants as props)
   Text Button Chip(+ChipGroup, SpecialtyChip) TextField(+SearchField) Toggle Radio Checkbox Card Label Badge
@@ -47,8 +49,8 @@ app/src/components/               design system (one RN component per Figma comp
   BottomNavbar Header Avatar StatTile Accordion BottomSheet Mascot FeatureIcon Backdrop AuthLayouts OtpInput
   SplashScene States(Skeleton/EmptyState/ErrorState) ExpertCards(ExpertCard/ExpertMiniCard/ExpertPhoto/RatingLine)
   RangeSlider Placeholder
-app/src/features/                 auth (store, GoogleSignIn sheet), assessment, catalog (filters store + FilterSheet), home, experts
-app/src/api/                      typed API functions + react-query hooks (auth.ts, me.ts, experts.ts)
+app/src/features/                 auth (store, GoogleSignIn sheet), assessment, catalog (filters store + FilterSheet), home, experts, booking (BookingParts: section title, expert/order cards, toggle card, student banner + promo card, price breakdown, payment method card)
+app/src/api/                      typed API functions + react-query hooks (auth.ts, me.ts incl. student verification, experts.ts, bookings.ts incl. invoices/polling/receipt)
 app/src/lib/                      api.ts (fetch client), format.ts (Rp/dates/WIB), validators.ts, routes.ts, config.ts,
                                   art.ts + ui-icons.ts (GENERATED, see "Assets"), storage.ts (secure-store token)
 app/src/theme/                    tokens.ts (Figma variables), typography.ts, gradients.ts
@@ -99,23 +101,68 @@ Demo login: `choso@haven.id` / `haven123`. OTP is always `1234`. A phone cannot 
 
 - Figma frames have a solid `#1E1E1E` fill, so **PNG export bakes a black rectangle into mascots and icons**. Export those nodes as **SVG** (`download_assets` with `defaultFormat: "svg"`), save them as `assets/mascot/mascot-<name>.svg` or `assets/icons/feature-<name>.svg`, then run `npm run gen:art`: it strips that background and writes `src/lib/art.ts`. Render with `<Mascot name="…"/>` / `<FeatureIcon name="…"/>`. UI icons (Figma `vuesax`) go in `assets/icons/ui/*.svg` → `npm run gen:icons` → `uiIcons`. Colors are baked into the SVGs, so each state (outline/filled) is a separate file.
 - Every `Mascot` instance rewrites the SVG's internal ids (`components/Art.tsx`) because the exports reuse the same ids and collide when several screens are mounted.
-- Mascot poses available: `wave, celebrate, happySmall, sad, confused, annoyed, student`. **Still missing: `peek`** (Ruang Tunggu, Phase 5): use a clearly labeled placeholder until the user finds it in Figma. Pose-to-screen mapping is in §4.8.
+- Mascot poses available: `wave, celebrate, happySmall, sad, confused, annoyed, student, peek`. `peek` is Figma "haven-berbinar 2" from L24 (`803:2115`); its frame-level drop shadow (`filter0`) was removed from the export because it rendered as a grey box. `gen:art` now also strips 390×844 page rectangles. Pose-to-screen mapping is in §4.8.
 - Expert photos: the design only has a dog placeholder, used for every expert except Nadia (real photo). The detail hero shows the placeholder at its own size. Real photos can replace `server/public/photos/*` and the seed `photoUrl` values.
 - Payment logos (QRIS, BCA, GoPay, OVO, DANA) are PNGs in `assets/logos/` with a `paymentLogos` map in `lib/assets.ts`. They have a white background: place them on white cards.
 - Blurred background blobs (Figma ellipses with Gaussian blur) are drawn by `components/Backdrop.tsx` as radial gradients, because React Native has no blur filter.
 
+### Phase 4 notes (what was built and how)
+
+- **Flow:** Detail → Pemesanan → (sad sheet → L31 → happy sheet → back) → Pembayaran → Menunggu → Berhasil. Backing out of Pembayaran cancels the unpaid booking (free, BR-18) so the slot frees at once instead of waiting for the 15-minute hold. "Kembali ke Beranda" / "Lihat Jadwal" call `router.dismissAll()` and then navigate, so back cannot re-enter the paid flow; the success route also has `gestureEnabled: false`.
+- **Booking defaults** are derived, not copied into state: anonymous from `settings.defaultAnonymous` (BR-14), promo from `settings.autoStudentPromo` when verified (BR-21), mode = VIDEO if offered, description prefilled from the assessment note. Turning the promo on while unverified shows the `mascot-sad` sheet; the toggle turns on by itself once `me` comes back VERIFIED. Unsupported modes are disabled radios.
+- **Errors:** 409 `SLOT_CONFLICT` → danger toast, slots refetched, selection cleared. 422 `fields` → inline. `PROMO_NOT_ELIGIBLE` → the verify sheet. `BOOKING_EXPIRED` on Pembayaran → "Waktu pembayaran habis" sheet.
+- **Menunggu Pembayaran:** the invoice (QR payload / VA number) is handed over through the react-query cache (`invoiceKey(ref)`); there is no GET for it, so a web reload on that screen shows an empty state that sends people back to choose a method. Countdown uses the server-clock offset from `serverNow`. Polls `GET /payments/:ref` every 3 s. FAILED → toast + "Coba Bayar Lagi" (new invoice, same method). Expiry → sheet "Pilih Slot Lagi" (`router.dismiss(2)` back to Pemesanan). Demo strip "Simulasikan: Berhasil | Gagal" when `EXPO_PUBLIC_DEMO_MODE=1`.
+- **Downloads:** "Unduh Kode QR" = `react-native-view-shot` capture → `expo-sharing`. Receipt = `GET /payments/:ref/receipt` → HTML → `expo-print` `printToFileAsync` → share (web: browser print dialog). Copy buttons use `expo-clipboard` (added). None of these were tried on a phone yet.
+- **Design system changes:** `Header` now matches the Figma page header (neutral-300 band + blurred blobs, Qanelas Bold 24). `Toggle` is a hand-drawn 60×27 Figma switch (was the native Switch). `Radio`/`Checkbox` use the Figma selection marks (`radioOn/radioOff` SVGs); `TextField` has `labelTone="section"` for the 16px blue labels on L31. New tokens: `text.section/muted/accent/methodHint`, `surface.header/payBar/qr`, `border.divider/dividerSoft/selected/field`. New UI icons: radio-on/off, pay-radio-off, arrange-circle, user-minus-bold, folder-add, grad-cap.
+- **Figma frames used:** L13 Pemesanan `785:2709`, L14 Verifikasi `785:2858`, L15 Pembayaran `785:2936`, L16 QRIS `730:3782`, splash `759:1161` (same `SplashScene` motion, `mascot-celebrate` = "haven-berbinar"). The promo/verification banner uses `mascot-student` ("megang ktm").
+- **Not in Figma, built from the handoff:** the L31 pending and already-verified states, the non-QRIS payment layouts (VA / transfer with copy, e-wallet stub), the failed-payment card, the expired sheet, the "Lihat Jadwal" link.
+- **Verified in the browser** (393×852, Expo web): the full flow with promo gate, upload (multipart, auto-approve), BR-10 total (Nadia 300.000 + 20.000 − 64.000 = 256.000), QRIS countdown, fail → retry → success, receipt endpoint, Beranda tile → verified state. **Not exercised in the UI:** the slot-conflict toast (BR-08 is covered by the server tests), the 15-minute expiry sheet, QR save and the PDF share on a device.
+
+### Phase 5 notes (what was built and how)
+
+- **Routes:** `(tabs)/sessions` (L22.1), `(tabs)/messages` (L91.1), `session/[bookingId]/waiting|call|chat|done`, `history/index` (Riwayat, from "Lihat Semua"), `history/[bookingId]` (L53.2), `reschedule/[bookingId]` (Ganti Jadwal). `/history` has the same typed-route quirk as `/payment/<id>`: use `HISTORY` from `lib/routes.ts`.
+- **API:** `api/sessions.ts` (join, consent, polled session state, a message-polling hook with `?after=`, send, end, report, chats, demo helpers) and `api/bookings.ts` (full booking DTO, cancel with `confirmPenalty`, reschedule, history, review). Countdowns and timers use `useServerNow(serverNow, dataUpdatedAt)` from `lib/useServerNow.ts` (the offset is derived, nothing stored).
+- **Join flow (BR-13):** the card shows "Masuk ke Ruang Konsultasi" only when the server says `canJoin`; the list refetches every 30 s. Video/voice → Ruang Tunggu → consent once (FA-26) → call. Chat → chat room directly (§13 #13). Voice starts with the camera off and the call shows the expert's photo instead of video.
+- **Call:** the expert feed is the expert's photo, blurred with "Menghubungkan…" until `expertConnected`. Self-view is `expo-camera` (front, flip button); denied permission shows "Kamera tidak aktif" with "Izinkan Kamera" / "Buka Pengaturan". "…" opens Info Sesi / Laporkan Masalah (+ "Simulasikan: Ahli mengakhiri sesi" in demo mode). Ending asks first. `features/sessions/useLiveSession.ts` sends any session the server closes (expert or timeout) to L53.1 with the toast "Sesi telah diakhiri oleh {nama}". A chat opened from history is read-only and never redirects.
+- **Chat:** polls every 2 s; expert bubbles left (navy, avatar), client bubbles right (neutral-300) with time and a single check / blue double check (read). Video/voice sessions get a "Kembali ke Video Call" pill; chat sessions get an "Akhiri Sesi" pill instead (Figma has no end control in chat). Stickers and image attachments show "segera hadir" toasts. The **inactivity sheet (BR-19)** appears once per gap when the newest client message has had no reply for `unresponsiveAfterSec` (now 10 minutes); "Laporkan Ketidaktanggapan" stores the report.
+- **Sesi Selesai:** same `SplashScene` motion (new `scrollable` and `mascotSize` props so the review form fits). Choosing stars plus either bottom button submits the review first (BR-17); no stars skips it.
+- **Cancel / reschedule (BR-18):** cancel asks first; inside 48 h the server answers `PENALTY_CONFIRM_REQUIRED` and the sheet "Pembatalan kurang dari 2x24 jam akan dikenakan denda" offers "Tetap Batalkan". "Ganti Jadwal" inside 48 h shows an explanation sheet; otherwise it opens the reschedule screen (not in Figma; built in the Pemesanan style).
+- **Revisions after Phase 4:** (1) gentler transitions: the native stack uses an iOS-style slide on Android too, splash-like screens cross-fade (`fadeTransition`), tabs cross-fade, and on web every screen fades in (`WebScreenFade` via `screenLayout`, because the web build has no native stack animation). (2) The L31 file field turns green with a check, "Ganti Dokumen" and "Dokumen terunggah · <file>" once a file is attached. (3) Every `TextField` with `secureTextEntry` has a show/hide eye.
+- **New components/tokens/icons:** `ActionSheet`, `Header variant="tab"`, `CallButton`, `TimerPill`, `E2ELine`, `HistoryCard`, `UpcomingCard`, `CameraPreview`. Tokens `surface.call/callOff/callBar/callStage/bubbleExpert/bubbleClient/banner/flipButton/connecting`, `text.success/danger/meta/bubbleTime`, `border.success`. Icons from Figma: call-video, call-mic-mute, call-chat, call-more, call-end, camera-switch, lock-small, stopwatch, read-receipt, send, attach, sticker. The unmuted mic uses Ionicons `mic` (Figma only has the muted glyph).
+- **Server change:** `UNRESPONSIVE_AFTER_SEC` default 60 → **600** (10 min). All 89 server tests still pass (the test env pins 60).
+- **Verified in the browser** (393×852): demo session via `POST /dev/sessions/start-soon` → join → waiting room (the pane blocks the camera, so the fallback shows) → call (timer, connect) → chat (send, expert reply) → silenced expert + clock +11 min → inactivity sheet → report → back to call → end → Sesi Selesai → summary (notes, real duration) → 5-star review → Beranda; Pesan list; read-only finished chat; Riwayat; penalty cancel sheet; reschedule save; password eye; green upload state. **Not checked on a device:** the real camera preview and flip, keyboard behaviour in chat, how the native transitions feel.
+
+### Phase 6 notes (what was built and how)
+
+- **Routes:** `(tabs)/profile` (L84), `settings/index` (L71), `settings/edit-profile|password|notifications|help|about|privacy|activity`, `support?type=HELPDESK|PROBLEM` (the helpdesk/report form, `POST /support/tickets`), `dev/index` (demo menu). Use `SETTINGS` / `DEV_MENU` from `lib/routes.ts` (same index-route typing quirk).
+- **Profil:** header gradient runs past the header and fades into the page; the gear opens Pengaturan; stats from `GET /me/stats`; FAQ (`features/account/AccountParts.tsx`, the second question open as in the hi-fi); "Hubungi Helpdesk Haven" / "Laporkan Masalah" open the form. **Long-press the avatar (demo mode) to open `/dev`** (handoff §10).
+- **Pengaturan:** cards without chevrons as in Figma; both toggles are optimistic (`PATCH /me/settings`, rolled back on error) and feed Pemesanan's defaults (BR-14, BR-21). "Keluar" → the confused sheet → `signOut()`. Notifikasi = stub; Aktivitas Akun = stub showing this device + account creation date (no login log on the server); Pusat Bantuan = FAQ + contact; Tentang Haven = the Figma face + logo (exported SVGs `about-face`, `haven-logo`) + the justified copy + version line; Privasi dan Keamanan = short privacy notes + "Hapus Akun".
+- **Modals (all Figma "Modal" variants):** `BottomSheet` now matches the component (70×4 handle, 140 px mascot, 24 px Figtree SemiBold title, 16 px body, ONE centred auto-width button; a second button only where the handoff needs a way out, e.g. the BR-18 penalty). Where each lives: verified / not verified → L31 + Pemesanan (unchanged); "Keluar dari aplikasi Haven?" → Pengaturan; "Akhiri sesi konsultasi?" → call and chat end; "Hapus akun Haven?" → Privasi dan Keamanan; "Amerta tidak merespon?" → chat inactivity (unchanged); "Batalkan konsultasi?" → Ruang Konsultasi cancel (**the Figma body and button repeat the "Hapus akun" copy; the app uses "Jadwal konsultasimu dengan … akan dibatalkan dan slotnya dilepas." + "Batalkan Konsultasi"**); "Bukti pembayaran diunduh!" → after the receipt download on L83.3, button "Kembali ke Halaman Utama".
+- **Server changes:** new `DELETE /me` (one transaction: frees future slots, takes the person's reviews out of the expert ratings, deletes bookings/messages/notes/invoices/transactions/reviews/reports/client/user; 409 `SESSION_IN_PROGRESS` while a session runs) with 2 tests. `POST /me/password` with a wrong current password now answers **422 `WRONG_PASSWORD`** with `fields.currentPassword` instead of 401 (a 401 signs the app out). 91 tests pass.
+- **Revisions after Phase 5:** (1) the `peek` mascot now sits in a bright yellow aura drawn with `Backdrop` (react-native-svg does not render the Figma SVG glow filter on phones); (2) chat-list status badges right-align under the time; (3) the call and chat timers **count down** from 60:00 (`countdownLabel`, capped at one hour so joining early still shows 60:00) and turn **red** with ≤ 10 minutes left (`SESSION_WARN_SEC`).
+- **Dev menu:** clock +5 m / +30 m / +1 d / reset (shows server time), "Buat sesi mulai 10 menit lagi" (then opens Ruang Konsultasi), instant student verification, per live session: silence/restore the expert, expert ends the session, the expert-side client profile (BR-15 masking), component gallery, reset & reseed (signs out). Paying a pending invoice stays on the Menunggu Pembayaran demo strip (the menu cannot know the invoice ref).
+- **Verified in the browser** (393×852): Profil, gear → Pengaturan, anonymous toggle persisted on the server and restored, Tentang Haven, logout sheet, dev menu → session → waiting room aura → call countdown 60:00 → clock +62 min → red timer in call and chat → new end sheet → Sesi Selesai, Pesan badges, Privasi → Hapus Akun sheet (the final delete was exercised by the server test, not on the demo account). **Not checked:** edit profile / change password / support form submissions in the browser (typechecked, server endpoints already tested), anything on a device.
+
+### Revisions after Phase 6 (Phase 7 on hold until these were done)
+
+- **Crisis resources (user approved the §13 recommendation):** `CrisisCard` at the top of Pusat Bantuan (`settings/help`): Healing119.id by Kemenkes (call `tel:119,8`, or chat via healing119.id) and 119 for medical emergencies, with "Haven bukan layanan darurat". Sources checked Nov 2026 (kemkes.go.id FAQ, infopublik.id). Re-check the numbers before a public demo.
+- **Keyboard:** `components/KeyboardScroll.tsx`. `KeyboardScroll` (KeyboardAvoidingView `padding` on both platforms, because SDK 58 Android is edge-to-edge and no longer resizes the window) + `KeyboardAwareScrollView`, which scrolls the focused input above the keyboard on show and whenever a `TextField` gains focus (`FIELD_FOCUS` event). Used by Pemesanan, L31, support form, Edit Informasi Personal, Ganti Kata Sandi, the auth layouts and the Sesi Selesai splash; the chat composer pads on Android too. **Only checkable on a device** (web has no soft keyboard).
+- **Profil:** the back / "Profil" / gear bar is fixed like the catalog header; avatar, stats and FAQ scroll under it. Both layers draw the same gradient, offset by the bar height.
+- **Finished chats:** the server now writes one closing line, "Sesi telah berakhir." (`SESSION_ENDED_TEXT`), however the session ended. `GET /me/chats` previews the last real bubble (SYSTEM lines excluded) and lists a finished session only if chat bubbles were exchanged, so every Selesai row reads the same (as in Figma L25). 2 new tests (93 total).
+- **Beranda search = cari fitur:** `features/home/FeatureSearch.tsx` (tiles, Ruang Konsultasi, Chat, Asesmen, Profil, Pengaturan and sub-pages, Pusat Bantuan, Bantuan darurat, Tentang). Results replace the Beranda body while typing; a last row "Cari psikolog bernama …" opens the catalog with that text. The "Bantuan" tile now opens Pusat Bantuan.
+- **Sesi Selesai:** buttons are "Kirim Ulasan" (needs a star rating; otherwise "Pilih bintang dulu ya, atau tekan Lewati.") and "Lewati"; both end on Beranda. If the session was already reviewed only "Kembali ke Beranda" shows.
+
 ### Decisions made during Phases 0–3 (add to §13)
 
-See the extra rows at the end of §13. In short: Waktu filter chips added; "Isi Asesmen 2 Menit" (Figma copy) instead of "Lakukan…"; OTP title typo fixed; paying an invoice extends the unpaid hold; bottom sheet is a plain RN `Modal`; license label still unconfirmed.
+See the extra rows at the end of §13. In short: Waktu filter chips added; "Isi Asesmen 2 Menit" (Figma copy) instead of "Lakukan…"; OTP title typo fixed; paying an invoice extends the unpaid hold; bottom sheet is a plain RN `Modal`; license label confirmed as SIPP for psychologists.
 
 ### What the next phases need from the user (Figma links) and from you
 
 Ask the user for these links *before* building each phase, one link per screen/state (the user copies "Copy link to selection"). Components already built are listed above; do not rebuild them.
 
-- **Phase 4:** L82 Pemesanan (full scroll), L31 Verifikasi Status Mahasiswa (form + "already verified" state), the 4 modals on the DS board (`700:807`, variants `700:806, 722:649, 725:1000, 725:1034, 725:1068, 725:1102, 725:1232, 725:1267`: sad "belum terverifikasi", happy "terverifikasi", confused "Keluar", annoyed "tidak merespon"), L83.1 Pembayaran, L83.2 Menunggu Pembayaran (QRIS and the other methods), L83.3 Pembayaran Berhasil, the "slot conflict" toast, the "waktu pembayaran habis" sheet.
-  Wire-up points left for you: the Beranda tile "Khusus mahasiswa" and the second info banner currently show a "Fitur ini segera hadir." toast: route them to L31 (or the "already verified" sheet). Replace `booking/[expertId].tsx`. Packages to add with `npx expo install`: `react-native-qrcode-svg`, `react-native-view-shot`, `expo-print`, `expo-sharing` (QR render + save, PDF receipt). `expo-document-picker` is already installed.
-- **Phase 5:** L22.1 Ruang Konsultasi (+ cancel/reschedule UI), L22.2 Ruang Tunggu (needs the `peek` mascot), L22.3 Video Call, L91.1 Pesan, L91.2 Chat Room (+ inactivity sheet), L53.1 Sesi Selesai, L53.2 Detail Konsultasi. `expo-camera` is already installed. The tab files `sessions.tsx` and `messages.tsx` are placeholders to replace; Beranda's "Jadwal Konsultasi" card already navigates to the sessions tab, and the 10-minute reminder toast (BR-20) is already in `(tabs)/index.tsx`.
-- **Phase 6:** L84 Profil, L71 Pengaturan + stub pages, the `/dev` menu (`DEMO_MODE`; the server endpoints it needs all exist). `profile.tsx` has a temporary "Keluar" button: move it into Pengaturan behind the `mascot-confused` sheet. The optional crisis-resources entry (§13) still needs the user's OK.
+- **Phase 4:** done (see "Phase 4 notes").
+- **Phase 5:** done (see "Phase 5 notes").
+- **Phase 6:** done (see "Phase 6 notes"). **Still open:** the optional crisis-resources entry (§13) needs the user's OK.
 - **Verification workflow that worked** (do this for each screen): start the API (`PORT=3056`) and `npx expo start --web --port 8099 -c` with `EXPO_PUBLIC_API_URL=http://localhost:3056`, open it in the Browser pane at 393×852, compare with the Figma screenshot, and drive the flows by clicking. Restart the web dev server after adding files (stale module cache). `web.output` is set to `single` in `app.json` for this; the product itself targets Expo Go.
 - **Web-only quirks** (not bugs on device): `Text` has `max-width:100%`, so overflowing labels need an explicit `maxWidth`; a dev-only React Navigation warning "ROUTE_NAMES_CHANGED not handled" appears after sign-in.
 
@@ -634,7 +681,7 @@ IDs in brackets refer to the LSTI deck: FA = filtered action, SC = service candi
 - **BR-16 Closing a session** [FA-35..37, S5]. A session closes when the user ends it, when the Ahli simulator ends it, or automatically at slot end. On close: status `COMPLETED`, `endedAt` saved, `durationMinutes` computed, room closed, and the **expert's notes** (summary + advice) saved and visible to the client.
 - **BR-17 Reviews** [FA-38, FA-39, S6 term 2]. One per completed booking. Rating 1–5 is required to submit; text is optional (≤ 500 characters). Update `expert.ratingAvg` and `ratingCount` in the same transaction. Public review cards always show the author as **"Anonymous"**.
 - **BR-18 Cancel and reschedule** (from the FAQ). If **≥ 48h** before start: cancel frees the slot (simulated refund, status `CANCELLED`), and reschedule moves to another free slot of the same expert (lock the new slot atomically, then release the old one). If **< 48h**: reschedule is disabled with an explanation; cancel is allowed after a warning sheet "Pembatalan kurang dari 2x24 jam akan dikenakan denda" (record `penaltyApplied: true`; no real money).
-- **BR-19 Chat inactivity.** If the user's latest message has had no expert reply for `UNRESPONSIVE_AFTER_SEC` (default **60s** in demo, configurable), show the inactivity sheet once per gap. Reports are stored.
+- **BR-19 Chat inactivity.** If the user's latest message has had no expert reply for `UNRESPONSIVE_AFTER_SEC` (default **600 s = 10 minutes**, user decision after Phase 4; the tests pin 60 s; for a demo set `UNRESPONSIVE_AFTER_SEC=60` or move the simulated clock with `POST /dev/clock {advanceMinutes: 11}`), show the inactivity sheet once per gap. Reports are stored.
 - **BR-20 Reminder toast.** While the app is open, show the toast once when a paid session is ≤ 10 minutes away.
 - **BR-21 Settings.** `autoStudentPromo` pre-enables the promo toggle at booking (only if verified). `defaultAnonymous` pre-enables the anonymous toggle.
 - **BR-22 Server time.** All time-window decisions are made on the server using the **simulated clock** (§10). Responses include `serverNow` so the app can render countdowns without trusting the device clock.
@@ -901,7 +948,7 @@ All seeded times are **relative to seed time**, so a fresh seed always demos wel
 
 ## 12. Build plan (phases with acceptance criteria)
 
-> **Status:** Phases 0–3 ✅ done, Phases 4–7 ⬜ to do. See "Build status" at the top of this file.
+> **Status:** Phases 0–6 ✅ done, Phase 7 ⬜ to do. See "Build status" at the top of this file.
 
 **Phase 0: Foundations** ✅
 Monorepo, Expo app with expo-router and TypeScript, fonts loaded, **theme tokens generated from the Figma variables** (§4, fallback values in §4.2), safe areas, core components (§4.7) built from their Figma components and shown on `/dev/components`, mascot and icon assets exported. Server skeleton with `/api/health`, Prisma + SQLite, `db:reset`.
@@ -924,16 +971,16 @@ Schema, seed, clock, auth, experts, slots, recommendations, bookings (BR-07/08/0
 **Phase 3: Discover** (tabs shell + navbar, L42, L52 + Filter, L51). ✅
 ✅ Every filter and sort changes results correctly. License, rating, and reviews are 1 tap from the catalog.
 
-**Phase 4: Book and pay** (L82, L31, L83.1–3). ⬜ **NEXT**: start here.
+**Phase 4: Book and pay** (L82, L31, L83.1–3). ✅
 ✅ The booking flow takes ≤ 5 steps. The promo gate works. A slot conflict shows the toast. The QR countdown and expiry work. Simulated pay leads to the success screen and the receipt PDF can be shared.
 
-**Phase 5: Attend** (L22.1, L22.2, L22.3, L91.1, L91.2, L53.1, L53.2).
+**Phase 5: Attend** (L22.1, L22.2, L22.3, L91.1, L91.2, L53.1, L53.2). ✅
 ✅ The seeded session can be joined. Camera preview and flip work. Video ⇄ chat switching keeps the timer. The expert replies. The inactivity sheet appears with the unresponsive flag. Ending leads to the review, notes are visible in Detail, and cancel/reschedule follows BR-18.
 
-**Phase 6: Account and polish** (L84, L71, stubs, toasts, empty/error/loading states, dev menu), then a visual pass against p.91–105 and Figma.
+**Phase 6: Account and polish** ✅ (L84, L71, stubs, toasts, empty/error/loading states, dev menu), then a visual pass against p.91–105 and Figma.
 ✅ The anonymous default and auto-promo settings propagate to Pemesanan. Logout uses the confirmation sheet.
 
-**Phase 7: Acceptance run.** Walk through the **7 M3 test scenarios** (M4 deck p.66–67) on a device and note any failures:
+**Phase 7: Acceptance run.** ⬜ **NEXT**: start here. Walk through the **7 M3 test scenarios** (M4 deck p.66–67) on a device and note any failures:
 1. Register + assessment (or skip) → Beranda
 2. Find the right psychologist: recommendation/profile, license/badge, rating + reviews
 3. Find an evening slot within budget using the filters
@@ -955,7 +1002,7 @@ Plus: demonstrate the **S1 double-booking rejection** with two devices, or with 
 | 3 | M3 planned to move the breadcrumbs to the bottom, but the hi-fi keeps them at the top (lowered below the notch) next to a back button. | Follow the hi-fi: ProgressDashes at the top, below the safe area. |
 | 4 | UT1.1/GA-13 require filtering by time (evening/weekend), and the M3 fix list says "add date & time chips", but the hi-fi filter has no time section. | Add a **"Waktu"** chip group to the Filter sheet (§6.4) in the same style. Tell the user. |
 | 5 | The M2 chat pop-up had "Laporkan" + "Jeda Sesi"; the hi-fi bottom sheet only has "Laporkan Ketidaktanggapan". | Follow the hi-fi (report only). |
-| 6 | The glossary says a Psikolog holds a **SIPP** and a Psikiater an **STR**, but the hi-fi shows "No. STR" for a psychologist. | Label by type: "No. SIPP" for psikolog, "No. STR" for psikiater. **Confirm with the user**; it's a one-line change. |
+| 6 | The glossary says a Psikolog holds a **SIPP** and a Psikiater an **STR**, but the hi-fi shows "No. STR" for a psychologist. | Label by type: "No. SIPP" for psikolog, "No. STR" for psikiater. **Confirmed by the user** (see #25). |
 | 7 | The Profil screen is **L16** in M2 and **L84** in M4. | Use L84. |
 | 8 | The LSTI contract says "Total = tarif", but M4 adds "Biaya Administrasi Rp20.000". | Follow M4 (BR-10). |
 | 9 | What happens to unpaid bookings isn't specified. | 15-minute hold, then expire and release the slot (BR-09). |
@@ -968,13 +1015,16 @@ Plus: demonstrate the **S1 double-booking rejection** with two devices, or with 
 | 16 | Intro CTA copy: Figma says "Isi Asesmen 2 Menit", §6.2 says "Lakukan Asesmen 2 Menit"; the OTP title has the typo "Masukan". | Use Figma's "Isi Asesmen 2 Menit" on the intro splash (the Beranda banner button says "Lakukan Asesmen 2 Menit", as in Figma); title is "Masukkan Kode OTP". |
 | 17 | L05 (assessment intro) and the "Terima Kasih sudah Berbagi" screen are the two "Splash" frames, each a start/end pair for a Smart Animate transition with no keyframe data. | `SplashScene` animates from the start state to the end state (circle expands, mascot rises while shrinking, text fades in). |
 | 18 | The filter sheet has no time-of-day group (see #4). | Added **Waktu** chips (Semua/Pagi/Siang/Malam/Akhir Pekan) in the same style, plus a small "Atur ulang" link in the sheet header. |
-| 19 | Beranda tile targets (§6.3) point to screens that do not exist yet. | Tiles open Cari with a preset filter; "Khusus mahasiswa" and the promo banner show a "segera hadir" toast until Phase 4. |
+| 19 | Beranda tile targets (§6.3) point to screens that do not exist yet. | Tiles open Cari with a preset filter; "Khusus mahasiswa" and the promo banner open L31 (since Phase 4). |
 | 20 | A paid invoice's 15-minute expiry can outlast the booking's 15-minute hold. | Creating an invoice extends `holdExpiresAt` to the invoice's expiry (server, `payment-flow.ts`). |
 | 21 | `Booking.slotId` was `@unique` in §8, so an expired/cancelled booking blocked the slot forever. | Now a normal index; exclusivity comes from the atomic `LOCKED` update (BR-08), covered by the concurrency tests. |
 | 22 | §2 suggests `@gorhom/bottom-sheet`. | `BottomSheet` and `FilterSheet` use RN `Modal` (no gesture/native dependency risk). Swap later only if drag-to-dismiss is wanted. |
 | 23 | §2 suggests a multi-slider library. | `RangeSlider` is a pure-JS PanResponder slider (Expo Go safe). |
 | 24 | Only one real expert photo exists in the design. | Nadia has it; all others use the design's placeholder image (served from `server/public`). |
-| 25 | License label (#6) is still **unconfirmed with the user**. | The API returns `licenseLabel` by type (psikolog `SIPP`, psikiater `STR`); the detail page shows "No. SIPP" for psychologists while the Figma frame shows "No. STR". One-line change in `services/experts.ts` once the user decides. |
+| 25 | License label (#6): the Figma frames show "No. STR" for psychologists. | **Confirmed by the user: keep "No. SIPP"** for psikolog and "No. STR" for psikiater (`licenseLabel` from `services/experts.ts`). The Figma "No. STR" on psychologist cards is an intentional deviation. |
+| 26 | The Figma payment screen has no states for VA / transfer / e-wallet, failure, or expiry. | Built from §6.8 in the same card style; QRIS follows Figma L16 exactly. |
+| 27 | Figma modal "Batalkan konsultasi?" (883:2834) reuses the "Hapus akun" body and button. | Title kept; body "Jadwal konsultasimu dengan … akan dibatalkan dan slotnya dilepas.", button "Batalkan Konsultasi". |
+| 28 | Session timer: counted up in Phase 5. | User decision: counts down from 60:00 and turns red at ≤ 10 minutes. |
 
 **Recommended addition (ask the user first):** Haven targets people who may be in distress, and the "Suicidal Thought" specialty appears in the hi-fi. Consider a small, non-intrusive "Butuh bantuan darurat?" entry in Pusat Bantuan/FAQ that points to Indonesian crisis resources. **Don't add it without the user's OK**, since it isn't in the design.
 

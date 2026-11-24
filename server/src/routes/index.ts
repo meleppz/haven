@@ -138,6 +138,11 @@ api.patch("/me", async (req, res) => {
   res.json(await clients.updateProfile(authOf(req).clientId, b));
 });
 
+/** "Hapus akun Haven?": permanent; the token stops working afterwards (401). */
+api.delete("/me", async (req, res) => {
+  res.json(await clients.deleteAccount(authOf(req).clientId));
+});
+
 api.post("/me/password", async (req, res) => {
   const b = parse(z.object({ currentPassword: z.string(), newPassword: z.string().min(8, "Password minimal 8 karakter ya") }), req.body);
   await clients.changePassword(authOf(req).clientId, b.currentPassword, b.newPassword);

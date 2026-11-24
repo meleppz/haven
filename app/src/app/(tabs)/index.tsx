@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useRouter, type Href } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { photoSource, useRecommendations, useUpcoming } from "@/api/experts";
@@ -8,6 +8,7 @@ import { useMe } from "@/api/me";
 import { Avatar, Backdrop, EmptyState, ErrorState, ExpertMiniCard, SearchField, Skeleton, Text, useToast, type Blob } from "@/components";
 import { errorMessage } from "@/features/auth/errors";
 import { useCatalog, type Filters } from "@/features/catalog/filters";
+import { FeatureResults, type Feature } from "@/features/home/FeatureSearch";
 import { AssessmentBanner, InfoBannerCard, QuickAccessGrid, ScheduleCard, SectionTitle, type InfoBanner } from "@/features/home/HomeParts";
 import { colors, layout, palette } from "@/theme";
 
@@ -49,19 +50,25 @@ export default function Beranda() {
     openCatalog(preset, focus);
     router.navigate("/search");
   };
-  const comingSoon = () => toast.show({ kind: "info", title: "Fitur ini segera hadir." });
 
   const onTile = (key: string) => {
     switch (key) {
       case "hariIni": return goCatalog({ availableToday: true });
       case "ahli247": return goCatalog({ chips: ["24x7"] });
       case "promo": return goCatalog({ chips: ["student"] });
-      case "mahasiswa": return comingSoon(); // L31 Verifikasi Status Mahasiswa: Phase 4
+      case "mahasiswa": return router.push("/student-verification"); // L31 (shows the verified state when already done)
       case "cariAhli": return goCatalog({});
       case "rating": return goCatalog({ sort: "rating" });
       case "riwayat": return router.navigate("/sessions");
-      case "bantuan": return router.navigate("/profile");
+      case "bantuan": return router.push("/settings/help"); // Pusat Bantuan (FAQ, helpdesk, bantuan darurat)
     }
+  };
+
+  const [q, setQ] = useState("");
+  const openFeature = (f: Feature) => {
+    setQ("");
+    if (f.tile) onTile(f.tile);
+    else if (f.href) router.push(f.href as Href);
   };
 
   const openExpert = (id: string) => router.push({ pathname: "/experts/[id]", params: { id } });
@@ -107,11 +114,17 @@ export default function Beranda() {
             )}
           </View>
         </View>
+        {/* Revision: the Beranda search finds Haven features (the catalog has its own psychologist search). */}
         <View>
-          <SearchField placeholder="Cari…" showSoftInputOnFocus={false} onFocus={() => goCatalog({}, true)} />
+          <SearchField placeholder="Cari fitur…" value={q} onChangeText={setQ} returnKeyType="search" accessibilityLabel="Cari fitur Haven" />
         </View>
       </View>
 
+      {q.trim() ? (
+        <View style={{ paddingHorizontal: layout.pagePadding, paddingTop: 16 }}>
+          <FeatureResults query={q} onOpen={openFeature} onSearchExperts={() => goCatalog({ q: q.trim() })} />
+        </View>
+      ) : (
       <View style={{ paddingHorizontal: layout.pagePadding, paddingTop: 16, gap: 24 }}>
         <View style={{ gap: 12 }}>
           <SectionTitle>Jelajahi Fitur Haven</SectionTitle>
@@ -166,7 +179,7 @@ export default function Beranda() {
             horizontal
             data={INFO_BANNERS}
             keyExtractor={(b) => b.key}
-            renderItem={({ item }) => <InfoBannerCard banner={item} onPress={() => (item.key === "cek" ? router.push("/assessment/age") : comingSoon())} />}
+            renderItem={({ item }) => <InfoBannerCard banner={item} onPress={() => (item.key === "cek" ? router.push("/assessment/age") : router.push("/student-verification"))} />}
             ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
             showsHorizontalScrollIndicator={false}
             snapToAlignment="start"
@@ -175,6 +188,7 @@ export default function Beranda() {
           />
         </View>
       </View>
+      )}
     </ScrollView>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd server && set PORT=3056&& set DEMO_MODE=1&& npm run start"],
+      "port": 3056
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd app && set EXPO_PUBLIC_API_URL=http://localhost:3056&& set EXPO_PUBLIC_DEMO_MODE=1&& npx expo start --web --port 8099 -c"],
+      "port": 8099
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgXml } from "react-native-svg";
 import { uiIcons } from "@/lib/ui-icons";
@@ -7,6 +7,7 @@ import { colors, layout, palette } from "@/theme";
 import { Mascot } from "./Art";
 import { Backdrop, type Blob } from "./Backdrop";
 import { Button } from "./Button";
+import { KeyboardAwareScrollView } from "./KeyboardScroll";
 import { ProgressDashes } from "./Misc";
 import { Text } from "./Text";
 
@@ -31,7 +32,7 @@ export function AuthHero({ title, fields, actions }: HeroProps) {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior="padding">
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.flex}
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
@@ -51,7 +52,7 @@ export function AuthHero({ title, fields, actions }: HeroProps) {
           <View style={{ gap: 16 }}>{fields}</View>
           <View style={{ gap: 12, marginTop: 24 }}>{actions}</View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -120,7 +121,7 @@ export function StepScreen({ step, title, onBack, children, cta, compact }: Step
         </Pressable>
       </View>
       <KeyboardAvoidingView style={styles.fill} behavior="padding">
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.fill}
           contentContainerStyle={{ paddingHorizontal: 17, paddingTop: compact ? 0 : 96 - 44, paddingBottom: 24, gap: 32 }}
           keyboardShouldPersistTaps="handled"
@@ -130,7 +131,7 @@ export function StepScreen({ step, title, onBack, children, cta, compact }: Step
             {title}
           </Text>
           {children}
-        </ScrollView>
+        </KeyboardAwareScrollView>
         <View style={{ paddingHorizontal: 16.5, paddingTop: 8, paddingBottom: keyboard ? 12 : Math.max(insets.bottom, 12) + 4 }}>
           <Button label={cta.label} onPress={cta.onPress} disabled={cta.disabled} loading={cta.loading} />
         </View>
